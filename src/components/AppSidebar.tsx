@@ -3,7 +3,10 @@ import {
   MessageSquare,
   GraduationCap,
   BrainCircuit,
+  ShoppingCart,
+  Hammer,
   Wrench,
+  Wifi,
   Home,
   Moon,
   Sun,
@@ -30,7 +33,10 @@ const zones = [
   { title: "The Hive", url: "/hive", icon: MessageSquare },
   { title: "The Academy", url: "/academy", icon: GraduationCap },
   { title: "The Core", url: "/core", icon: BrainCircuit },
+  { title: "The Depot", url: "/depot", icon: ShoppingCart },
+  { title: "The Forge", url: "/forge", icon: Hammer },
   { title: "The Toolbox", url: "/toolbox", icon: Wrench },
+  { title: "The Grid", url: "/grid", icon: Wifi },
 ];
 
 export function AppSidebar() {
