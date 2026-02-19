@@ -10,9 +10,15 @@ import {
   Home,
   Moon,
   Sun,
+  LogIn,
+  LogOut,
+  User,
+  Zap,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useTheme } from "@/components/ThemeProvider";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -42,6 +48,8 @@ const zones = [
 export function AppSidebar() {
   const { theme, toggle } = useTheme();
   const { state } = useSidebar();
+  const { user, profile, role, signOut } = useAuth();
+  const navigate = useNavigate();
   const collapsed = state === "collapsed";
 
   return (
@@ -72,10 +80,40 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <Button variant="ghost" size="icon" onClick={toggle} className="mx-auto">
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </Button>
+      <SidebarFooter className="gap-1 pb-3">
+        {/* User info or login */}
+        {user && profile && (
+          <div className={`px-2 py-1.5 rounded-lg border border-border bg-muted/40 ${collapsed ? "flex justify-center" : ""}`}>
+            {collapsed ? (
+              <User className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-foreground truncate">{profile.display_name}</p>
+                  <div className="flex items-center gap-0.5 text-[10px] text-amber font-mono">
+                    <Zap className="h-3 w-3" />{profile.volts}
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground capitalize">{role || "apprentice"}</p>
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="flex gap-1 justify-center">
+          <Button variant="ghost" size="icon" onClick={toggle}>
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+          {user ? (
+            <Button variant="ghost" size="icon" onClick={signOut} title="Sign out">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" onClick={() => navigate("/auth")} title="Sign in">
+              <LogIn className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

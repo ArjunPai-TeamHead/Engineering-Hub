@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppLayout } from "@/components/AppLayout";
+import { AuthProvider } from "@/hooks/useAuth";
+import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import Lab from "./pages/Lab";
 import ComponentDetail from "./pages/lab/ComponentDetail";
@@ -44,39 +46,42 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/lab" element={<Lab />} />
-              <Route path="/lab/component/:id" element={<ComponentDetail />} />
-              <Route path="/hive" element={<Hive />} />
-              <Route path="/academy" element={<Academy />} />
-              <Route path="/academy/course/:id" element={<CoursePage />} />
-              <Route path="/academy/lesson/:id" element={<LessonPage />} />
-              <Route path="/core" element={<Core />} />
-              <Route path="/depot" element={<Depot />} />
-              <Route path="/forge" element={<Forge />} />
-              <Route path="/forge/mounting-holes" element={<MountingHoles />} />
-              <Route path="/forge/wire-gauge" element={<WireGaugeCalc />} />
-              <Route path="/forge/heatsink" element={<HeatsinkCalc />} />
-              <Route path="/forge/fastener" element={<FastenerCalc />} />
-              <Route path="/forge/connectors" element={<ConnectorMatcher />} />
-              <Route path="/grid" element={<Grid />} />
-              <Route path="/toolbox" element={<Toolbox />} />
-              <Route path="/toolbox/resistor" element={<ResistorCalculator />} />
-              <Route path="/toolbox/ohms-law" element={<OhmsLaw />} />
-              <Route path="/toolbox/voltage-divider" element={<VoltageDivider />} />
-              <Route path="/toolbox/led-resistor" element={<LEDResistor />} />
-              <Route path="/toolbox/battery-life" element={<BatteryLife />} />
-              <Route path="/toolbox/555-timer" element={<Timer555 />} />
-              <Route path="/toolbox/base-converter" element={<BaseConverter />} />
-              <Route path="/toolbox/ascii-table" element={<AsciiTable />} />
-              <Route path="/toolbox/unit-converter" element={<UnitConverter />} />
-              <Route path="/toolbox/regex-tester" element={<RegexTester />} />
-              <Route path="/toolbox/trace-width" element={<TraceWidth />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/lab" element={<Lab />} />
+                <Route path="/lab/component/:id" element={<ComponentDetail />} />
+                <Route path="/hive" element={<Hive />} />
+                <Route path="/academy" element={<Academy />} />
+                <Route path="/academy/course/:id" element={<CoursePage />} />
+                <Route path="/academy/lesson/:id" element={<LessonPage />} />
+                <Route path="/core" element={<Core />} />
+                <Route path="/depot" element={<Depot />} />
+                <Route path="/forge" element={<Forge />} />
+                <Route path="/forge/mounting-holes" element={<MountingHoles />} />
+                <Route path="/forge/wire-gauge" element={<WireGaugeCalc />} />
+                <Route path="/forge/heatsink" element={<HeatsinkCalc />} />
+                <Route path="/forge/fastener" element={<FastenerCalc />} />
+                <Route path="/forge/connectors" element={<ConnectorMatcher />} />
+                <Route path="/grid" element={<Grid />} />
+                <Route path="/toolbox" element={<Toolbox />} />
+                <Route path="/toolbox/resistor" element={<ResistorCalculator />} />
+                <Route path="/toolbox/ohms-law" element={<OhmsLaw />} />
+                <Route path="/toolbox/voltage-divider" element={<VoltageDivider />} />
+                <Route path="/toolbox/led-resistor" element={<LEDResistor />} />
+                <Route path="/toolbox/battery-life" element={<BatteryLife />} />
+                <Route path="/toolbox/555-timer" element={<Timer555 />} />
+                <Route path="/toolbox/base-converter" element={<BaseConverter />} />
+                <Route path="/toolbox/ascii-table" element={<AsciiTable />} />
+                <Route path="/toolbox/unit-converter" element={<UnitConverter />} />
+                <Route path="/toolbox/regex-tester" element={<RegexTester />} />
+                <Route path="/toolbox/trace-width" element={<TraceWidth />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
