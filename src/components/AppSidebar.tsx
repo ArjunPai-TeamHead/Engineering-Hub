@@ -1,35 +1,15 @@
 import {
-  Cpu,
-  MessageSquare,
-  GraduationCap,
-  BrainCircuit,
-  ShoppingCart,
-  Hammer,
-  Wrench,
-  Wifi,
-  Home,
-  Moon,
-  Sun,
-  LogIn,
-  LogOut,
-  User,
-  Zap,
+  Cpu, MessageSquare, GraduationCap, BrainCircuit, ShoppingCart,
+  Wrench, Wifi, Home, Moon, Sun, LogIn, LogOut, User, Zap, Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
@@ -40,8 +20,7 @@ const zones = [
   { title: "The Academy", url: "/academy", icon: GraduationCap },
   { title: "The Core", url: "/core", icon: BrainCircuit },
   { title: "The Depot", url: "/depot", icon: ShoppingCart },
-  { title: "The Forge", url: "/forge", icon: Hammer },
-  { title: "The Toolbox", url: "/toolbox", icon: Wrench },
+  { title: "The Workshop", url: "/workshop", icon: Wrench },
   { title: "The Grid", url: "/grid", icon: Wifi },
 ];
 
@@ -64,12 +43,7 @@ export function AppSidebar() {
               {zones.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className="hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-accent text-primary font-medium"
-                    >
+                    <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent" activeClassName="bg-sidebar-accent text-primary font-medium">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </NavLink>
@@ -81,7 +55,6 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="gap-1 pb-3">
-        {/* User info or login */}
         {user && profile && (
           <div className={`px-2 py-1.5 rounded-lg border border-border bg-muted/40 ${collapsed ? "flex justify-center" : ""}`}>
             {collapsed ? (
@@ -104,6 +77,11 @@ export function AppSidebar() {
           <Button variant="ghost" size="icon" onClick={toggle}>
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
+          {user && (
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} title="Settings">
+              <Settings className="h-4 w-4" />
+            </Button>
+          )}
           {user ? (
             <Button variant="ghost" size="icon" onClick={signOut} title="Sign out">
               <LogOut className="h-4 w-4" />
