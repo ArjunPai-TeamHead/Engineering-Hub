@@ -142,6 +142,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_inventory: {
+        Row: {
+          component_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          component_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          component_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
