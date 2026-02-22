@@ -1,8 +1,15 @@
 import { useState } from "react";
-import { Search, GripVertical } from "lucide-react";
+import { Search, Cpu, Zap, Radio, Gauge, MonitorSmartphone, Cog, Battery, Cable, CircuitBoard } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { components, categories } from "@/data/componentLibrary";
+
+const categoryIcons: Record<string, React.ElementType> = {
+  Microcontrollers: Cpu, Passive: Zap, Active: Radio, Sensors: Gauge,
+  Displays: MonitorSmartphone, "Motors & Actuators": Cog, Communication: Radio,
+  ICs: CircuitBoard, Power: Battery, Connectors: Cable, Prototyping: CircuitBoard,
+};
 
 interface Props {
   onDrop: (componentId: string, name: string, category: string, x: number, y: number) => void;
@@ -10,58 +17,56 @@ interface Props {
 
 export function ComponentPalette({ onDrop }: Props) {
   const [search, setSearch] = useState("");
-  const [expandedCat, setExpandedCat] = useState<string | null>("Microcontrollers");
+  const [category, setCategory] = useState<string>("all");
 
-  const filtered = components.filter((c) =>
-    !search || c.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const groupedByCat = categories.reduce<Record<string, typeof components>>((acc, cat) => {
-    const items = filtered.filter((c) => c.category === cat);
-    if (items.length > 0) acc[cat] = items;
-    return acc;
-  }, {});
+  const filtered = components
+    .filter(c => category === "all" || c.category === category)
+    .filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()));
 
   const handleDragStart = (e: React.DragEvent, comp: typeof components[0]) => {
-    e.dataTransfer.setData("application/component", JSON.stringify({
-      componentId: comp.id, name: comp.name, category: comp.category,
-    }));
+    e.dataTransfer.setData("application/component", JSON.stringify({ componentId: comp.id, name: comp.name, category: comp.category }));
     e.dataTransfer.effectAllowed = "copy";
   };
 
   return (
-    <div className="flex h-full flex-col border-r border-border bg-card">
-      <div className="p-2 border-b border-border">
-        <p className="text-xs font-semibold text-foreground mb-1.5">Components</p>
+    <div className="flex h-full flex-col bg-card">
+      <div className="p-3 space-y-2 border-b border-border">
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger className="h-8 text-xs rounded-lg">
+            <SelectValue placeholder="Components" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Components</SelectItem>
+            {categories.map(cat => (
+              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="h-7 pl-7 text-xs" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder="Search" value={search} onChange={e => setSearch(e.target.value)} className="h-8 pl-8 text-xs rounded-lg" />
         </div>
       </div>
       <ScrollArea className="flex-1">
-        <div className="p-1">
-          {Object.entries(groupedByCat).map(([cat, items]) => (
-            <div key={cat} className="mb-1">
-              <button
-                onClick={() => setExpandedCat(expandedCat === cat ? null : cat)}
-                className="w-full flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground rounded"
+        <div className="grid grid-cols-3 gap-1 p-2">
+          {filtered.map(comp => {
+            const Icon = categoryIcons[comp.category] || CircuitBoard;
+            return (
+              <div
+                key={comp.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, comp)}
+                onClick={() => onDrop(comp.id, comp.name, comp.category, 200 + Math.random() * 200, 150 + Math.random() * 150)}
+                className="flex flex-col items-center gap-1 rounded-xl p-2 cursor-grab active:cursor-grabbing hover:bg-muted/60 transition-colors group"
+                title={comp.description}
               >
-                <span className={`transition-transform ${expandedCat === cat ? "rotate-90" : ""}`}>▸</span>
-                {cat} ({items.length})
-              </button>
-              {expandedCat === cat && items.map((comp) => (
-                <div
-                  key={comp.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, comp)}
-                  className="flex items-center gap-1.5 px-2 py-1 mx-1 rounded text-xs text-foreground/80 hover:bg-muted cursor-grab active:cursor-grabbing"
-                >
-                  <GripVertical className="h-3 w-3 text-muted-foreground/50 shrink-0" />
-                  <span className="truncate">{comp.name}</span>
+                <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
-              ))}
-            </div>
-          ))}
+                <span className="text-[10px] text-center text-muted-foreground leading-tight line-clamp-2">{comp.name}</span>
+              </div>
+            );
+          })}
         </div>
       </ScrollArea>
     </div>
