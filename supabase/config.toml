@@ -1,1 +1,4 @@
 project_id = "srddxdhgxnfpxvauxjsz"
+
+[functions.create-depot-checkout]
+verify_jwt = false
