@@ -135,7 +135,18 @@ const Depot = () => {
       toast({ title: "Sign in required", description: "Please sign in to checkout", variant: "destructive" });
       return;
     }
-    toast({ title: "Checkout", description: "Stripe checkout integration active — BOM will be processed." });
+    const items = Object.entries(cart).map(([id, qty]) => {
+      const comp = components.find(c => c.id === id);
+      const price = getBestPrice(id) || 0;
+      return { name: comp?.name || id, price, quantity: qty };
+    });
+    try {
+      const { data, error } = await supabase.functions.invoke("create-depot-checkout", { body: { items } });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (err: any) {
+      toast({ title: "Checkout failed", description: err.message, variant: "destructive" });
+    }
   };
 
   return (
