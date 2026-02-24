@@ -70,6 +70,8 @@ export type Database = {
       }
       hive_messages: {
         Row: {
+          attachment_name: string | null
+          attachment_url: string | null
           channel_id: string
           content: string
           created_at: string
@@ -78,6 +80,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
           channel_id: string
           content: string
           created_at?: string
@@ -86,6 +90,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
           channel_id?: string
           content?: string
           created_at?: string
@@ -99,6 +105,38 @@ export type Database = {
             columns: ["channel_id"]
             isOneToOne: false
             referencedRelation: "hive_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hive_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hive_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "hive_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -139,6 +177,45 @@ export type Database = {
           updated_at?: string
           user_id?: string
           volts?: number
+        }
+        Relationships: []
+      }
+      user_files: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string | null
+          folder: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string | null
+          folder?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string | null
+          folder?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
