@@ -18,7 +18,7 @@ import Core from "./pages/Core";
 import Depot from "./pages/Depot";
 import Workshop from "./pages/Workshop";
 import Settings from "./pages/Settings";
-import Grid from "./pages/Grid";
+import CloudDatabase from "./pages/CloudDatabase";
 import ResistorCalculator from "./pages/toolbox/ResistorCalculator";
 import OhmsLaw from "./pages/toolbox/OhmsLaw";
 import VoltageDivider from "./pages/toolbox/VoltageDivider";
@@ -85,7 +85,7 @@ const App = () => (
                 <Route path="/workshop/fastener" element={<FastenerCalc />} />
                 <Route path="/workshop/connectors" element={<ConnectorMatcher />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/grid" element={<Grid />} />
+                <Route path="/cloud" element={<CloudDatabase />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

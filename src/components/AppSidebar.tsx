@@ -1,6 +1,6 @@
 import {
   Cpu, MessageSquare, GraduationCap, BrainCircuit, ShoppingCart,
-  Wrench, Wifi, Home, Moon, Sun, LogIn, LogOut, User, Zap, Settings,
+  Wrench, Database, Home, Moon, Sun, LogIn, LogOut, User, Zap, Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useTheme } from "@/components/ThemeProvider";
@@ -21,7 +21,7 @@ const zones = [
   { title: "The Core", url: "/core", icon: BrainCircuit },
   { title: "The Depot", url: "/depot", icon: ShoppingCart },
   { title: "The Workshop", url: "/workshop", icon: Wrench },
-  { title: "The Grid", url: "/grid", icon: Wifi },
+  { title: "Cloud Database", url: "/cloud", icon: Database },
 ];
 
 export function AppSidebar() {
