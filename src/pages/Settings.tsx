@@ -1,27 +1,46 @@
-import { useState } from "react";
-import { Settings as SettingsIcon, User, Palette, Shield, Save, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
+import { Settings as SettingsIcon, User, Palette, Shield, Save, Loader2, Camera } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
-  const { profile, refreshProfile, signOut } = useAuth();
+  const { profile, refreshProfile, signOut, user } = useAuth();
   const { theme, toggle } = useTheme();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState(profile?.display_name || "");
   const [bio, setBio] = useState(profile?.bio || "");
   const [skillLevel, setSkillLevel] = useState(profile?.skill_level || "beginner");
   const [githubUsername, setGithubUsername] = useState(profile?.github_username || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !profile) return;
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const filePath = `${user.id}/avatar.${ext}`;
+    const { error } = await supabase.storage.from("user-files").upload(filePath, file, { upsert: true });
+    if (error) { toast({ title: "Upload failed", description: error.message, variant: "destructive" }); setUploading(false); return; }
+    const { data: urlData } = supabase.storage.from("user-files").getPublicUrl(filePath);
+    setAvatarUrl(urlData.publicUrl);
+    await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", user.id);
+    await refreshProfile();
+    toast({ title: "Avatar updated!" });
+    setUploading(false);
+  };
 
   const saveProfile = async () => {
     if (!profile) return;
@@ -65,6 +84,26 @@ const Settings = () => {
               <CardDescription>Update your public profile</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Avatar upload */}
+              <div className="flex items-center gap-4">
+                <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                  <Avatar className="h-20 w-20">
+                    {avatarUrl && <AvatarImage src={avatarUrl} />}
+                    <AvatarFallback className="text-lg font-bold bg-primary/10 text-primary">
+                      {displayName?.slice(0, 2).toUpperCase() || "EN"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    {uploading ? <Loader2 className="h-5 w-5 text-primary-foreground animate-spin" /> : <Camera className="h-5 w-5 text-primary-foreground" />}
+                  </div>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Profile Picture</p>
+                  <p className="text-xs text-muted-foreground">Click to upload a new avatar</p>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label>Display Name</Label>
                 <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
@@ -89,10 +128,6 @@ const Settings = () => {
                 <Label>GitHub Username</Label>
                 <Input value={githubUsername} onChange={(e) => setGithubUsername(e.target.value)} placeholder="octocat" />
               </div>
-              <div className="space-y-1.5">
-                <Label>Avatar URL</Label>
-                <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://..." />
-              </div>
               <Button onClick={saveProfile} disabled={saving} className="bg-primary hover:bg-primary/90">
                 {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
                 Save Changes
@@ -113,9 +148,7 @@ const Settings = () => {
                   <p className="font-medium text-foreground">Theme</p>
                   <p className="text-sm text-muted-foreground">Currently using {theme} mode</p>
                 </div>
-                <Button variant="outline" onClick={toggle}>
-                  Switch to {theme === "dark" ? "Light" : "Dark"}
-                </Button>
+                <Button variant="outline" onClick={toggle}>Switch to {theme === "dark" ? "Light" : "Dark"}</Button>
               </div>
             </CardContent>
           </Card>
