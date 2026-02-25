@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { ShoppingCart, Search, Package, Box, Plus, Minus, Trash2, CreditCard } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  ShoppingCart, Search, Package, Box, Plus, Minus, Trash2, CreditCard,
+  Heart, History, Clock, CheckCircle2, XCircle, Loader2,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-// Real pricing data (INR) from Robu.in / Amazon India
 const pricing: Record<string, { robu: number | null; amazon: number | null; inStock: boolean }> = {
   "arduino-uno": { robu: 1801, amazon: 1339, inStock: true },
   "arduino-mega": { robu: 2250, amazon: 1999, inStock: true },
@@ -97,12 +99,60 @@ const pricing: Record<string, { robu: number | null; amazon: number | null; inSt
   "jumper-wires": { robu: 149, amazon: 150, inStock: true },
 };
 
+interface Order {
+  id: string;
+  items: { name: string; price: number; quantity: number }[];
+  total_amount: number;
+  currency: string;
+  status: string;
+  created_at: string;
+}
+
+const statusIcon: Record<string, React.ReactNode> = {
+  pending: <Clock className="h-4 w-4 text-amber" />,
+  completed: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+  failed: <XCircle className="h-4 w-4 text-destructive" />,
+};
+
 const Depot = () => {
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState("shop");
+  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Load wishlist
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("wishlist").select("component_id").eq("user_id", user.id).then(({ data }) => {
+      if (data) setWishlist(new Set(data.map(w => w.component_id)));
+    });
+  }, [user]);
+
+  // Load orders
+  useEffect(() => {
+    if (!user || activeTab !== "orders") return;
+    setLoadingOrders(true);
+    supabase.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).then(({ data }) => {
+      if (data) setOrders(data as any);
+      setLoadingOrders(false);
+    });
+  }, [user, activeTab]);
+
+  const toggleWishlist = async (componentId: string) => {
+    if (!user) { toast({ title: "Sign in required", variant: "destructive" }); return; }
+    if (wishlist.has(componentId)) {
+      await supabase.from("wishlist").delete().eq("user_id", user.id).eq("component_id", componentId);
+      setWishlist(prev => { const n = new Set(prev); n.delete(componentId); return n; });
+    } else {
+      await supabase.from("wishlist").insert({ user_id: user.id, component_id: componentId });
+      setWishlist(prev => new Set(prev).add(componentId));
+    }
+  };
 
   const getBestPrice = (id: string) => {
     const p = pricing[id];
@@ -112,7 +162,10 @@ const Depot = () => {
   };
 
   const filteredComponents = components
-    .filter(c => activeCategory === "all" || c.category === activeCategory)
+    .filter(c => {
+      if (activeTab === "wishlist") return wishlist.has(c.id);
+      return activeCategory === "all" || c.category === activeCategory;
+    })
     .filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.description.toLowerCase().includes(search.toLowerCase()));
 
   const addToCart = (id: string) => setCart(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
@@ -123,30 +176,85 @@ const Depot = () => {
     return next;
   });
 
-  const cartTotal = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const best = getBestPrice(id);
-    return sum + (best ? best * qty : 0);
-  }, 0);
-
+  const cartTotal = Object.entries(cart).reduce((sum, [id, qty]) => sum + ((getBestPrice(id) || 0) * qty), 0);
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
 
   const handleCheckout = async () => {
-    if (!user) {
-      toast({ title: "Sign in required", description: "Please sign in to checkout", variant: "destructive" });
-      return;
-    }
+    if (!user) { toast({ title: "Sign in required", variant: "destructive" }); return; }
     const items = Object.entries(cart).map(([id, qty]) => {
       const comp = components.find(c => c.id === id);
-      const price = getBestPrice(id) || 0;
-      return { name: comp?.name || id, price, quantity: qty };
+      return { name: comp?.name || id, price: getBestPrice(id) || 0, quantity: qty };
     });
+
+    // Save order
+    await supabase.from("orders").insert({
+      user_id: user.id,
+      items: items as any,
+      total_amount: cartTotal,
+      currency: "INR",
+      status: "pending",
+    });
+
     try {
       const { data, error } = await supabase.functions.invoke("create-depot-checkout", { body: { items } });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) { window.open(data.url, "_blank"); setCart({}); }
     } catch (err: any) {
       toast({ title: "Checkout failed", description: err.message, variant: "destructive" });
     }
+  };
+
+  const renderProductCard = (comp: typeof components[0]) => {
+    const bestPrice = getBestPrice(comp.id);
+    const p = pricing[comp.id];
+    const qty = cart[comp.id] || 0;
+    const isWished = wishlist.has(comp.id);
+
+    return (
+      <Card key={comp.id} className="ios-card overflow-hidden">
+        <CardHeader className="pb-2">
+          <div className="flex items-start justify-between">
+            <CardTitle className="text-sm leading-tight">{comp.name}</CardTitle>
+            <div className="flex items-center gap-1">
+              <button onClick={() => toggleWishlist(comp.id)} className="p-1 rounded-full hover:bg-accent transition-colors">
+                <Heart className={`h-4 w-4 ${isWished ? "fill-rose-500 text-rose-500" : "text-muted-foreground"}`} />
+              </button>
+              {p && (
+                <Badge variant={p.inStock ? "default" : "destructive"} className="text-[10px] shrink-0 rounded-full">
+                  {p.inStock ? "In Stock" : "Out"}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <CardDescription className="text-xs line-clamp-2">{comp.description}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between pt-0">
+          {bestPrice ? (
+            <div className="flex flex-col">
+              <span className="font-mono text-sm font-bold text-foreground">₹{bestPrice.toLocaleString("en-IN")}</span>
+              {p?.robu && p?.amazon && p.robu !== p.amazon && (
+                <span className="text-[10px] text-muted-foreground">{p.robu < p.amazon ? "Robu" : "Amazon"} best</span>
+              )}
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">Price TBD</span>
+          )}
+          {qty > 0 ? (
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="outline" className="h-7 w-7 rounded-full" onClick={() => removeFromCart(comp.id)}>
+                {qty === 1 ? <Trash2 className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+              </Button>
+              <span className="w-6 text-center text-sm font-mono font-bold">{qty}</span>
+              <Button size="icon" variant="outline" className="h-7 w-7 rounded-full" onClick={() => addToCart(comp.id)}>
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" className="text-xs rounded-xl" onClick={() => addToCart(comp.id)}>Add</Button>
+          )}
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -177,87 +285,108 @@ const Depot = () => {
         )}
       </div>
 
-      <div className="relative mb-5">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search components..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 rounded-xl h-11" />
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-5">
+        <TabsList>
+          <TabsTrigger value="shop"><ShoppingCart className="h-4 w-4 mr-1" /> Shop</TabsTrigger>
+          <TabsTrigger value="wishlist"><Heart className="h-4 w-4 mr-1" /> Wishlist ({wishlist.size})</TabsTrigger>
+          <TabsTrigger value="orders"><History className="h-4 w-4 mr-1" /> Orders</TabsTrigger>
+        </TabsList>
 
-      {/* Category pills */}
-      <ScrollArea className="mb-5">
-        <div className="flex gap-2 pb-2">
-          <button onClick={() => setActiveCategory("all")} className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${activeCategory === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
-            All ({components.length})
-          </button>
-          {categories.map(cat => (
-            <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
-              {cat}
-            </button>
-          ))}
-        </div>
-      </ScrollArea>
+        <TabsContent value="shop" className="mt-4">
+          <div className="relative mb-5">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search components..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 rounded-xl h-11" />
+          </div>
+          <ScrollArea className="mb-5">
+            <div className="flex gap-2 pb-2">
+              <button onClick={() => setActiveCategory("all")} className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${activeCategory === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
+                All ({components.length})
+              </button>
+              {categories.map(cat => (
+                <button key={cat} onClick={() => setActiveCategory(cat)} className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredComponents.map(renderProductCard)}
+          </div>
+        </TabsContent>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filteredComponents.map(comp => {
-          const bestPrice = getBestPrice(comp.id);
-          const p = pricing[comp.id];
-          const qty = cart[comp.id] || 0;
-          return (
-            <Card key={comp.id} className="ios-card overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-sm leading-tight">{comp.name}</CardTitle>
-                  {p && (
-                    <Badge variant={p.inStock ? "default" : "destructive"} className="text-[10px] shrink-0 rounded-full">
-                      {p.inStock ? "In Stock" : "Out"}
-                    </Badge>
-                  )}
-                </div>
-                <CardDescription className="text-xs line-clamp-2">{comp.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex items-center justify-between pt-0">
-                {bestPrice ? (
-                  <div className="flex flex-col">
-                    <span className="font-mono text-sm font-bold text-foreground">₹{bestPrice.toLocaleString("en-IN")}</span>
-                    {p?.robu && p?.amazon && p.robu !== p.amazon && (
-                      <span className="text-[10px] text-muted-foreground">
-                        {p.robu < p.amazon ? "Robu" : "Amazon"} best
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-xs text-muted-foreground italic">Price TBD</span>
-                )}
-                {qty > 0 ? (
-                  <div className="flex items-center gap-1">
-                    <Button size="icon" variant="outline" className="h-7 w-7 rounded-full" onClick={() => removeFromCart(comp.id)}>
-                      {qty === 1 ? <Trash2 className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-                    </Button>
-                    <span className="w-6 text-center text-sm font-mono font-bold">{qty}</span>
-                    <Button size="icon" variant="outline" className="h-7 w-7 rounded-full" onClick={() => addToCart(comp.id)}>
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <Button size="sm" variant="outline" className="text-xs rounded-xl" onClick={() => addToCart(comp.id)}>
-                    Add
-                  </Button>
-                )}
+        <TabsContent value="wishlist" className="mt-4">
+          {wishlist.size === 0 ? (
+            <Card className="ios-card border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Heart className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">Your wishlist is empty</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">Tap the ♡ on any component to save it</p>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredComponents.map(renderProductCard)}
+            </div>
+          )}
+        </TabsContent>
 
-      {/* My Parts Box */}
-      <Card className="mt-8 ios-card border-dashed">
-        <CardHeader className="flex flex-row items-center gap-4">
-          <Box className="h-8 w-8 text-muted-foreground/40" />
-          <div>
-            <CardTitle className="text-base">My Parts Box</CardTitle>
-            <CardDescription>Digital inventory of your owned components — track what you have and scan project BOMs</CardDescription>
-          </div>
-        </CardHeader>
-      </Card>
+        <TabsContent value="orders" className="mt-4">
+          {!user ? (
+            <Card className="ios-card border-dashed">
+              <CardContent className="py-12 text-center text-muted-foreground">Sign in to view order history</CardContent>
+            </Card>
+          ) : loadingOrders ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+          ) : orders.length === 0 ? (
+            <Card className="ios-card border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Package className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">No orders yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {orders.map(order => (
+                <Card key={order.id} className="ios-card">
+                  <CardContent className="py-4 px-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        {statusIcon[order.status] || statusIcon.pending}
+                        <span className="text-sm font-medium text-foreground capitalize">{order.status}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="space-y-1">
+                      {(order.items as any[]).map((item: any, i: number) => (
+                        <div key={i} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">{item.name} × {item.quantity}</span>
+                          <span className="font-mono text-foreground">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-border flex justify-between">
+                      <span className="text-sm font-semibold text-foreground">Total</span>
+                      <span className="font-mono font-bold text-foreground">₹{order.total_amount.toLocaleString("en-IN")}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {activeTab === "shop" && (
+        <Card className="mt-8 ios-card border-dashed">
+          <CardHeader className="flex flex-row items-center gap-4">
+            <Box className="h-8 w-8 text-muted-foreground/40" />
+            <div>
+              <CardTitle className="text-base">My Parts Box</CardTitle>
+              <CardDescription>Digital inventory of your owned components — track what you have and scan project BOMs</CardDescription>
+            </div>
+          </CardHeader>
+        </Card>
+      )}
     </div>
   );
 };
