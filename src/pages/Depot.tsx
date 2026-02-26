@@ -13,6 +13,7 @@ import { components, categories } from "@/data/componentLibrary";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import CheckoutModal, { type CheckoutDetails } from "@/components/depot/CheckoutModal";
 
 const pricing: Record<string, { robu: number | null; amazon: number | null; inStock: boolean }> = {
   "arduino-uno": { robu: 1801, amazon: 1339, inStock: true },
@@ -122,10 +123,10 @@ const Depot = () => {
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Load wishlist
   useEffect(() => {
     if (!user) return;
     supabase.from("wishlist").select("component_id").eq("user_id", user.id).then(({ data }) => {
@@ -133,7 +134,6 @@ const Depot = () => {
     });
   }, [user]);
 
-  // Load orders
   useEffect(() => {
     if (!user || activeTab !== "orders") return;
     setLoadingOrders(true);
@@ -179,16 +179,21 @@ const Depot = () => {
   const cartTotal = Object.entries(cart).reduce((sum, [id, qty]) => sum + ((getBestPrice(id) || 0) * qty), 0);
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
 
-  const handleCheckout = async () => {
-    if (!user) { toast({ title: "Sign in required", variant: "destructive" }); return; }
-    const items = Object.entries(cart).map(([id, qty]) => {
-      const comp = components.find(c => c.id === id);
-      return { name: comp?.name || id, price: getBestPrice(id) || 0, quantity: qty };
-    });
+  const cartItems = Object.entries(cart).map(([id, qty]) => {
+    const comp = components.find(c => c.id === id);
+    return { id, name: comp?.name || id, price: getBestPrice(id) || 0, quantity: qty };
+  });
 
-    // Save order
+  const handleCheckout = () => {
+    if (!user) { toast({ title: "Sign in required", variant: "destructive" }); return; }
+    setCheckoutOpen(true);
+  };
+
+  const handleCheckoutConfirm = async (details: CheckoutDetails) => {
+    const items = cartItems.map(({ name, price, quantity }) => ({ name, price, quantity }));
+
     await supabase.from("orders").insert({
-      user_id: user.id,
+      user_id: user!.id,
       items: items as any,
       total_amount: cartTotal,
       currency: "INR",
@@ -198,7 +203,7 @@ const Depot = () => {
     try {
       const { data, error } = await supabase.functions.invoke("create-depot-checkout", { body: { items } });
       if (error) throw error;
-      if (data?.url) { window.open(data.url, "_blank"); setCart({}); }
+      if (data?.url) { window.open(data.url, "_blank"); setCart({}); setCheckoutOpen(false); }
     } catch (err: any) {
       toast({ title: "Checkout failed", description: err.message, variant: "destructive" });
     }
@@ -387,6 +392,14 @@ const Depot = () => {
           </CardHeader>
         </Card>
       )}
+
+      <CheckoutModal
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        items={cartItems}
+        total={cartTotal}
+        onConfirm={handleCheckoutConfirm}
+      />
     </div>
   );
 };

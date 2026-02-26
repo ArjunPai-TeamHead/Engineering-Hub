@@ -9,7 +9,8 @@ export type ComponentCategory =
   | "ICs"
   | "Power"
   | "Connectors"
-  | "Prototyping";
+  | "Prototyping"
+  | "IoT";
 
 export interface ComponentItem {
   id: string;
@@ -142,5 +143,5 @@ export const components: ComponentItem[] = [
 
 export const categories: ComponentCategory[] = [
   "Microcontrollers", "Passive", "Active", "Sensors", "Displays",
-  "Motors & Actuators", "Communication", "ICs", "Power", "Connectors", "Prototyping",
+  "Motors & Actuators", "Communication", "ICs", "Power", "Connectors", "Prototyping", "IoT",
 ];
