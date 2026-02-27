@@ -11,7 +11,7 @@ export function AppLayout() {
   const location = useLocation();
   const isPublic = PUBLIC_ROUTES.includes(location.pathname);
 
-  if (loading) {
+  if (loading && !isPublic) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -19,7 +19,7 @@ export function AppLayout() {
     );
   }
 
-  if (!user && !isPublic) {
+  if (!loading && !user && !isPublic) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
