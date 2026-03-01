@@ -1,6 +1,6 @@
 import {
   Cpu, MessageSquare, GraduationCap, BrainCircuit, ShoppingCart,
-  Wrench, Database, Home, Moon, Sun, LogIn, LogOut, User, Zap, Settings,
+  Wrench, Database, Home, Moon, Sun, LogIn, LogOut, User, Zap, Settings, Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useTheme } from "@/components/ThemeProvider";
@@ -28,6 +28,7 @@ export function AppSidebar() {
   const { theme, toggle } = useTheme();
   const { state } = useSidebar();
   const { user, profile, role, signOut } = useAuth();
+  const isAdmin = role === "admin";
   const navigate = useNavigate();
   const collapsed = state === "collapsed";
 
@@ -80,6 +81,11 @@ export function AppSidebar() {
           {user && (
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} title="Settings">
               <Settings className="h-4 w-4" />
+            </Button>
+          )}
+          {user && isAdmin && (
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} title="Admin Dashboard">
+              <Shield className="h-4 w-4" />
             </Button>
           )}
           {user ? (
