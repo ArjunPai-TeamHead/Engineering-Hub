@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { AuthProvider } from "@/hooks/useAuth";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
+import Hub from "./pages/Hub";
 import Index from "./pages/Index";
 import Lab from "./pages/Lab";
 import ComponentDetail from "./pages/lab/ComponentDetail";
@@ -87,6 +88,7 @@ const App = () => (
                 <Route path="/workshop/connectors" element={<ConnectorMatcher />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/hub" element={<Hub />} />
                 <Route path="/cloud" element={<CloudDatabase />} />
               </Route>
               <Route path="*" element={<NotFound />} />
