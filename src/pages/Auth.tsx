@@ -1,12 +1,46 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { BrainCircuit, Mail, Lock, User, Eye, EyeOff, Zap } from "lucide-react";
+import {
+  BrainCircuit, Mail, Lock, User, Eye, EyeOff, Zap, Phone, Shield, Wallet,
+  Github, MessageSquare, Facebook, Figma, GitBranch, Globe, Key, Linkedin,
+  BookOpen, Tv, Hash, Music, Briefcase, Video,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+const authProviders = [
+  { name: "Email", icon: Mail, enabled: true },
+  { name: "Phone", icon: Phone, enabled: false },
+  { name: "SAML 2.0", icon: Shield, enabled: false },
+  { name: "Web3 Wallet", icon: Wallet, enabled: false },
+  { name: "Apple", icon: Globe, enabled: false },
+  { name: "Azure", icon: Globe, enabled: false },
+  { name: "Bitbucket", icon: GitBranch, enabled: false },
+  { name: "Discord", icon: MessageSquare, enabled: false },
+  { name: "Facebook", icon: Facebook, enabled: false },
+  { name: "Figma", icon: Figma, enabled: false },
+  { name: "GitHub", icon: Github, enabled: false },
+  { name: "GitLab", icon: GitBranch, enabled: false },
+  { name: "Google", icon: Globe, enabled: false },
+  { name: "Kakao", icon: MessageSquare, enabled: false },
+  { name: "KeyCloak", icon: Key, enabled: false },
+  { name: "LinkedIn (OIDC)", icon: Linkedin, enabled: false },
+  { name: "Notion", icon: BookOpen, enabled: false },
+  { name: "Twitch", icon: Tv, enabled: false },
+  { name: "X / Twitter (OAuth 2.0)", icon: Hash, enabled: false },
+  { name: "Twitter (Deprecated)", icon: Hash, enabled: false },
+  { name: "Slack (OIDC)", icon: Hash, enabled: false },
+  { name: "Slack (Deprecated)", icon: Hash, enabled: false },
+  { name: "Spotify", icon: Music, enabled: false },
+  { name: "WorkOS", icon: Briefcase, enabled: false },
+  { name: "Zoom", icon: Video, enabled: false },
+];
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -15,6 +49,7 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showProviders, setShowProviders] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -26,32 +61,73 @@ const Auth = () => {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email, password,
-          options: { emailRedirectTo: window.location.origin, data: { display_name: displayName || email.split("@")[0] } },
+        // Try to sign up first
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { display_name: displayName || email.split("@")[0] },
+          },
         });
-        if (error) throw error;
-        toast({ title: "Check your email!", description: "We sent you a confirmation link to activate your account." });
+
+        if (signUpError) {
+          // If user already exists, try signing in automatically
+          if (
+            signUpError.message.toLowerCase().includes("already registered") ||
+            signUpError.message.toLowerCase().includes("already exists") ||
+            signUpError.message.toLowerCase().includes("user already")
+          ) {
+            const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+            if (signInError) {
+              // Account exists but wrong password
+              if (
+                signInError.message.toLowerCase().includes("invalid") ||
+                signInError.message.toLowerCase().includes("credentials")
+              ) {
+                throw new Error("Account already exists but the password is incorrect. Try logging in instead.");
+              }
+              throw signInError;
+            }
+            toast({ title: "Welcome back!", description: "You already had an account — signed you in." });
+            navigate(from);
+            return;
+          }
+          throw signUpError;
+        }
+
+        // With auto-confirm, user is immediately signed in
+        if (signUpData.session) {
+          toast({ title: "Account created!", description: "Welcome to EngiNexus." });
+          navigate(from);
+        } else {
+          // Fallback: user might already exist (Supabase returns fake success)
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+          if (signInError) {
+            throw new Error("Account may already exist. Try logging in with the correct password.");
+          }
+          toast({ title: "Welcome back!", description: "Signed you in." });
+          navigate(from);
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (error.message.toLowerCase().includes("invalid")) {
+            throw new Error("Invalid email or password. Check your credentials and try again.");
+          }
+          throw error;
+        }
         navigate(from);
       }
     } catch (err: unknown) {
-      toast({ title: "Authentication failed", description: err instanceof Error ? err.message : "Something went wrong", variant: "destructive" });
+      toast({
+        title: "Authentication failed",
+        description: err instanceof Error ? err.message : "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
-
-  const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) toast({ title: "Google sign-in failed", description: error.message, variant: "destructive" });
-  };
-
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -74,21 +150,12 @@ const Auth = () => {
 
         <div className="glass-strong rounded-3xl p-8 shadow-xl">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-foreground">{mode === "login" ? "Welcome back" : "Create account"}</h2>
-            <p className="text-sm text-muted-foreground mt-1">{mode === "login" ? "Sign in to your workspace" : "Join and start building"}</p>
-          </div>
-
-          {/* Social Sign-In */}
-          <div className="space-y-2.5 mb-5">
-            <Button variant="outline" className="w-full rounded-xl h-11" onClick={handleGoogleLogin}>
-              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-              Continue with Google
-            </Button>
-          </div>
-
-          <div className="relative mb-5">
-            <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">or</span>
+            <h2 className="text-xl font-bold text-foreground">
+              {mode === "login" ? "Welcome back" : "Create account"}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {mode === "login" ? "Sign in to your workspace" : "Join and start building"}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,7 +164,13 @@ const Auth = () => {
                 <Label htmlFor="displayName">Display Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="displayName" placeholder="circuit_wizard" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="pl-9 rounded-xl h-11" />
+                  <Input
+                    id="displayName"
+                    placeholder="circuit_wizard"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="pl-9 rounded-xl h-11"
+                  />
                 </div>
               </div>
             )}
@@ -105,32 +178,110 @@ const Auth = () => {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="engineer@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-9 rounded-xl h-11" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="engineer@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="pl-9 rounded-xl h-11"
+                />
               </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="pl-9 pr-10 rounded-xl h-11" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="pl-9 pr-10 rounded-xl h-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
             <Button type="submit" className="w-full rounded-xl h-11 font-semibold" disabled={loading}>
               {loading ? (
-                <span className="flex items-center gap-2"><span className="animate-spin">⚡</span> {mode === "login" ? "Signing in..." : "Creating account..."}</span>
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin">⚡</span>
+                  {mode === "login" ? "Signing in..." : "Creating account..."}
+                </span>
               ) : (
-                <span className="flex items-center gap-2"><Zap className="h-4 w-4" />{mode === "login" ? "Sign In" : "Create Account"}</span>
+                <span className="flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  {mode === "login" ? "Sign In" : "Create Account"}
+                </span>
               )}
             </Button>
           </form>
 
+          {/* Auth Providers Section */}
+          <div className="mt-5">
+            <div className="relative mb-4">
+              <Separator />
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
+                authentication providers
+              </span>
+            </div>
+
+            <Button
+              variant="outline"
+              className="w-full rounded-xl mb-3"
+              onClick={() => setShowProviders(!showProviders)}
+            >
+              {showProviders ? "Hide Providers" : "View All Providers"}
+            </Button>
+
+            {showProviders && (
+              <ScrollArea className="h-[320px] rounded-xl border border-border p-1">
+                <div className="grid grid-cols-1 gap-1.5 p-2">
+                  {authProviders.map((provider) => {
+                    const Icon = provider.icon;
+                    return (
+                      <button
+                        key={provider.name}
+                        type="button"
+                        className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted/50 cursor-default"
+                      >
+                        <div className="rounded-md bg-muted p-1.5 shrink-0">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <span className="text-sm font-medium text-foreground flex-1 truncate">
+                          {provider.name}
+                        </span>
+                        <Badge
+                          variant={provider.enabled ? "default" : "secondary"}
+                          className="text-[10px] px-2 py-0.5 shrink-0"
+                        >
+                          {provider.enabled ? "Enabled" : "Disabled"}
+                        </Badge>
+                      </button>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
+
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
-              <button onClick={() => setMode(mode === "login" ? "signup" : "login")} className="text-primary hover:underline font-medium">
+              <button
+                onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                className="text-primary hover:underline font-medium"
+              >
                 {mode === "login" ? "Sign up free" : "Sign in"}
               </button>
             </p>
