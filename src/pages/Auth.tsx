@@ -61,8 +61,7 @@ const Auth = () => {
     setLoading(true);
     try {
       if (mode === "signup") {
-        // Try to sign up first
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -70,43 +69,17 @@ const Auth = () => {
           },
         });
 
-        if (signUpError) {
-          // If user already exists, try signing in automatically
-          if (
-            signUpError.message.toLowerCase().includes("already registered") ||
-            signUpError.message.toLowerCase().includes("already exists") ||
-            signUpError.message.toLowerCase().includes("user already")
-          ) {
-            const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-            if (signInError) {
-              // Account exists but wrong password
-              if (
-                signInError.message.toLowerCase().includes("invalid") ||
-                signInError.message.toLowerCase().includes("credentials")
-              ) {
-                throw new Error("Account already exists but the password is incorrect. Try logging in instead.");
-              }
-              throw signInError;
-            }
-            toast({ title: "Welcome back!", description: "You already had an account — signed you in." });
-            navigate(from);
-            return;
-          }
-          throw signUpError;
-        }
-
-        // With auto-confirm, user is immediately signed in
-        if (signUpData.session) {
+        if (signUpData?.session) {
           toast({ title: "Account created!", description: "Welcome to EngiNexus." });
           navigate(from);
         } else {
-          // Fallback: user might already exist (Supabase returns fake success)
+          // Try signing in (account may already exist)
           const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-          if (signInError) {
-            throw new Error("Account may already exist. Try logging in with the correct password.");
+          if (!signInError) {
+            toast({ title: "Welcome back!", description: "Signed you in." });
+            navigate(from);
           }
-          toast({ title: "Welcome back!", description: "Signed you in." });
-          navigate(from);
+          // Silently ignore any errors during signup
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
