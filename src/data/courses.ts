@@ -1,8 +1,15 @@
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+}
+
 export interface Lesson {
   id: string;
   title: string;
   duration: string;
   content: string;
+  quiz?: QuizQuestion[];
 }
 
 export interface Course {
@@ -16,50 +23,1030 @@ export interface Course {
 }
 
 export const courses: Course[] = [
+  // ═══════════════════════════════════════════════════════
+  // RASPBERRY PI ROBOTICS 2025 (from PDF — 38 projects)
+  // ═══════════════════════════════════════════════════════
   {
-    id: "iot-101", title: "IoT Fundamentals", path: "IoT", level: "Beginner",
-    description: "Learn the basics of Internet of Things — connecting sensors to the cloud.",
+    id: "rpi-robotics-2025",
+    title: "Raspberry Pi Robotics 2025",
+    path: "Robotics",
+    level: "Beginner",
+    description: "38 hands-on Raspberry Pi projects — LEDs, buttons, RGB, buzzers, sensors, motors, IoT, GUI, Bluetooth & LCD.",
     prerequisites: [],
     lessons: [
-      { id: "iot-101-1", title: "What is IoT?", duration: "15 min", content: "# What is IoT?\n\nThe Internet of Things (IoT) refers to the network of physical devices embedded with sensors, software, and connectivity to exchange data.\n\n## Key Concepts\n- **Sensors** collect data from the physical world\n- **Microcontrollers** process the data locally\n- **Connectivity** sends data to the cloud (WiFi, BLE, LoRa)\n- **Cloud platforms** store and analyze data\n\n## Example\n```cpp\n// Read temperature from DHT11\n#include <DHT.h>\nDHT dht(2, DHT11);\n\nvoid setup() {\n  Serial.begin(9600);\n  dht.begin();\n}\n\nvoid loop() {\n  float temp = dht.readTemperature();\n  Serial.println(temp);\n  delay(2000);\n}\n```" },
-      { id: "iot-101-2", title: "Your First Arduino Circuit", duration: "20 min", content: "# Your First Arduino Circuit\n\nLet's blink an LED — the \"Hello World\" of hardware.\n\n## What You Need\n- Arduino Uno\n- 1x LED\n- 1x 220Ω Resistor\n- Breadboard + jumper wires\n\n## Wiring\n1. Connect LED **anode (+)** to pin 13 via the resistor\n2. Connect LED **cathode (-)** to GND\n\n## Code\n```cpp\nvoid setup() {\n  pinMode(13, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(13, HIGH);\n  delay(1000);\n  digitalWrite(13, LOW);\n  delay(1000);\n}\n```" },
-      { id: "iot-101-3", title: "Reading Sensor Data", duration: "25 min", content: "# Reading Sensor Data\n\nLearn to read analog and digital sensors.\n\n## Analog vs Digital\n- **Digital**: HIGH (1) or LOW (0) — e.g., pushbutton\n- **Analog**: 0-1023 range — e.g., potentiometer, LDR\n\n```cpp\nint sensorValue = analogRead(A0);\nfloat voltage = sensorValue * (5.0 / 1023.0);\nSerial.println(voltage);\n```" },
-    ],
-  },
-  {
-    id: "iot-201", title: "WiFi & Cloud Integration", path: "IoT", level: "Intermediate",
-    description: "Connect your ESP32 to WiFi and send data to cloud dashboards.",
-    prerequisites: ["iot-101"],
-    lessons: [
-      { id: "iot-201-1", title: "ESP32 WiFi Setup", duration: "20 min", content: "# ESP32 WiFi Setup\n\n```cpp\n#include <WiFi.h>\n\nconst char* ssid = \"YourNetwork\";\nconst char* password = \"YourPassword\";\n\nvoid setup() {\n  Serial.begin(115200);\n  WiFi.begin(ssid, password);\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n  Serial.println(\"Connected!\");\n  Serial.println(WiFi.localIP());\n}\n```" },
-      { id: "iot-201-2", title: "HTTP Requests", duration: "25 min", content: "# Making HTTP Requests\n\nSend sensor data to a REST API.\n\n```cpp\n#include <HTTPClient.h>\n\nvoid sendData(float temp) {\n  HTTPClient http;\n  http.begin(\"https://api.example.com/data\");\n  http.addHeader(\"Content-Type\", \"application/json\");\n  String payload = \"{\\\"temperature\\\":\" + String(temp) + \"}\";\n  int code = http.POST(payload);\n  http.end();\n}\n```" },
-    ],
-  },
-  {
-    id: "robot-101", title: "Robotics Basics", path: "Robotics", level: "Beginner",
-    description: "Build your first robot — motor control, sensors, and basic navigation.",
-    prerequisites: [],
-    lessons: [
-      { id: "robot-101-1", title: "DC Motor Control", duration: "20 min", content: "# DC Motor Control with L298N\n\n## Wiring\n- **IN1/IN2**: Direction control\n- **ENA**: Speed control (PWM)\n\n```cpp\n#define IN1 8\n#define IN2 9\n#define ENA 10\n\nvoid setup() {\n  pinMode(IN1, OUTPUT);\n  pinMode(IN2, OUTPUT);\n  pinMode(ENA, OUTPUT);\n}\n\nvoid forward(int speed) {\n  digitalWrite(IN1, HIGH);\n  digitalWrite(IN2, LOW);\n  analogWrite(ENA, speed);\n}\n```" },
-      { id: "robot-101-2", title: "Servo Control", duration: "15 min", content: "# Servo Motor Control\n\n```cpp\n#include <Servo.h>\nServo myServo;\n\nvoid setup() {\n  myServo.attach(9);\n}\n\nvoid loop() {\n  for (int angle = 0; angle <= 180; angle++) {\n    myServo.write(angle);\n    delay(15);\n  }\n}\n```" },
-      { id: "robot-101-3", title: "Obstacle Avoidance", duration: "30 min", content: "# Obstacle Avoidance with HC-SR04\n\n```cpp\n#define TRIG 7\n#define ECHO 6\n\nlong readDistance() {\n  digitalWrite(TRIG, LOW);\n  delayMicroseconds(2);\n  digitalWrite(TRIG, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(TRIG, LOW);\n  long duration = pulseIn(ECHO, HIGH);\n  return duration * 0.034 / 2; // cm\n}\n\nvoid loop() {\n  long dist = readDistance();\n  if (dist < 20) {\n    // Turn or stop\n  } else {\n    // Go forward\n  }\n}\n```" },
-    ],
-  },
-  {
-    id: "ai-101", title: "AI for Embedded Systems", path: "AI", level: "Beginner",
-    description: "Introduction to machine learning on microcontrollers (TinyML).",
-    prerequisites: [],
-    lessons: [
-      { id: "ai-101-1", title: "What is TinyML?", duration: "15 min", content: "# What is TinyML?\n\nTinyML brings machine learning to microcontrollers.\n\n## Why TinyML?\n- **Low power**: Runs on batteries\n- **Low latency**: No cloud round-trip\n- **Privacy**: Data stays on device\n\n## Frameworks\n- TensorFlow Lite for Microcontrollers\n- Edge Impulse\n- Arduino ML" },
-      { id: "ai-101-2", title: "Gesture Recognition", duration: "30 min", content: "# Gesture Recognition with MPU6050\n\nUse accelerometer data to classify hand gestures.\n\n## Steps\n1. Collect training data (wave, punch, idle)\n2. Train a model with Edge Impulse\n3. Deploy to Arduino Nano 33 BLE\n\n```cpp\n// Pseudocode\nfloat features[FEATURE_SIZE];\ncollect_imu_data(features);\nint gesture = classify(features);\nif (gesture == WAVE) {\n  Serial.println(\"Wave detected!\");\n}\n```" },
-    ],
-  },
-  {
-    id: "robot-201", title: "Line-Following Robot", path: "Robotics", level: "Intermediate",
-    description: "Build a robot that follows a black line using IR sensors and PID control.",
-    prerequisites: ["robot-101"],
-    lessons: [
-      { id: "robot-201-1", title: "IR Sensor Array", duration: "20 min", content: "# IR Sensor Array\n\nUse 3-5 IR reflectance sensors to detect a black line on white surface.\n\n```cpp\nint sensors[5] = {A0, A1, A2, A3, A4};\n\nint readLine() {\n  int position = 0;\n  for (int i = 0; i < 5; i++) {\n    position += analogRead(sensors[i]) * i;\n  }\n  return position;\n}\n```" },
+      {
+        id: "rpi25-01",
+        title: "LED Basics (R1–R3)",
+        duration: "25 min",
+        content: `# LED Basics — Blink, User-Controlled & Blinker
+
+## R1. LED Blink
+
+The classic "Hello World" of electronics — make an LED blink on and off.
+
+### Components
+- Raspberry Pi
+- 1x LED + resistor
+- Breadboard & jumper wires
+
+### Code
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+led_pin = 21
+
+gpio.setmode(gpio.BCM)
+gpio.setup(led_pin, gpio.OUT)
+
+print("LED Blink Program Started (Press CTRL+C to stop)")
+
+try:
+    while True:
+        gpio.output(led_pin, gpio.HIGH)
+        print("LED is ON")
+        time.sleep(1)
+
+        gpio.output(led_pin, gpio.LOW)
+        print("LED is OFF")
+        time.sleep(1)
+
+except KeyboardInterrupt:
+    print("\\nProgram stopped by user. Cleaning up GPIO...")
+    gpio.cleanup()
+\`\`\`
+
+### Key Concepts
+- **gpio.setmode(gpio.BCM)** — Use Broadcom pin numbering
+- **gpio.setup(pin, gpio.OUT)** — Configure pin as output
+- **gpio.output(pin, gpio.HIGH/LOW)** — Send signal
+- **gpio.cleanup()** — Reset all pins on exit
+
+---
+
+## R2. User Input-Controlled LED
+
+Control the LED with text commands.
+
+\`\`\`python
+import RPi.GPIO as gpio
+
+led_pin = 21
+
+gpio.setmode(gpio.BCM)
+gpio.setup(led_pin, gpio.OUT)
+
+print("Type 'on', 'off', or 'exit'")
+
+try:
+    while True:
+        command = input("Enter command: ").lower()
+
+        if command == "on":
+            gpio.output(led_pin, gpio.HIGH)
+            print("LED is ON")
+        elif command == "off":
+            gpio.output(led_pin, gpio.LOW)
+            print("LED is OFF")
+        elif command == "exit":
+            print("Exiting program...")
+            break
+        else:
+            print("Invalid command.")
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R3. User-Controlled LED Blinker
+
+Ask the user how many times to blink.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+led_pin = 21
+
+gpio.setmode(gpio.BCM)
+gpio.setup(led_pin, gpio.OUT)
+
+try:
+    blinks = int(input("Enter number of blinks: "))
+
+    for i in range(blinks):
+        gpio.output(led_pin, gpio.HIGH)
+        print(f"Blink {i+1}: LED is ON")
+        time.sleep(1)
+
+        gpio.output(led_pin, gpio.LOW)
+        print(f"Blink {i+1}: LED is OFF")
+        time.sleep(1)
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\``,
+        quiz: [
+          { question: "What does gpio.setmode(gpio.BCM) do?", options: ["Sets the pin numbering to Broadcom SOC channel", "Sets the pin numbering to physical board numbers", "Enables all GPIO pins", "Resets the GPIO state"], correctIndex: 0 },
+          { question: "What signal level turns an LED ON?", options: ["gpio.LOW", "gpio.HIGH", "gpio.PWM", "gpio.INPUT"], correctIndex: 1 },
+          { question: "Why do we call gpio.cleanup() at the end?", options: ["To save power", "To reset all GPIO pins to a safe state", "To turn off the Raspberry Pi", "To update firmware"], correctIndex: 1 },
+        ],
+      },
+      {
+        id: "rpi25-02",
+        title: "LED Projects (R4–R5)",
+        duration: "25 min",
+        content: `# LED Projects — Math Quiz & Guess the Number
+
+## R4. Interactive LED Math Quiz
+
+Use a green LED for correct answers and a red LED for wrong answers.
+
+### Components
+- Raspberry Pi
+- Green LED (correct) + Red LED (wrong)
+- Breadboard & jumper wires
+
+### Code
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+import random
+
+green_led = 21
+red_led = 16
+
+gpio.setmode(gpio.BCM)
+gpio.setup(green_led, gpio.OUT)
+gpio.setup(red_led, gpio.OUT)
+
+def generate_question():
+    num1 = random.randint(1, 10)
+    num2 = random.randint(1, 10)
+    return num1, num2, num1 * num2
+
+try:
+    while True:
+        num1, num2, correct_answer = generate_question()
+        user_answer = int(input(f"What is {num1} * {num2}?: "))
+
+        if user_answer == correct_answer:
+            gpio.output(green_led, gpio.HIGH)
+            gpio.output(red_led, gpio.LOW)
+            print("Correct! Green LED is ON.")
+        else:
+            gpio.output(green_led, gpio.LOW)
+            gpio.output(red_led, gpio.HIGH)
+            print(f"Wrong! The correct answer is {correct_answer}.")
+
+        time.sleep(2)
+        gpio.output(green_led, gpio.LOW)
+        gpio.output(red_led, gpio.LOW)
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R5. Guess the Number with LED Feedback
+
+Three LEDs indicate: green = correct, yellow = too low, red = too high.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+import random
+
+green_led = 21
+yellow_led = 16
+red_led = 12
+
+gpio.setmode(gpio.BCM)
+gpio.setup(green_led, gpio.OUT)
+gpio.setup(yellow_led, gpio.OUT)
+gpio.setup(red_led, gpio.OUT)
+
+target_number = random.randint(1, 10)
+guess_count = 0
+
+try:
+    while True:
+        user_guess = int(input("Guess a number between 1 and 10: "))
+        guess_count += 1
+
+        if user_guess == target_number:
+            gpio.output(green_led, gpio.HIGH)
+            gpio.output(yellow_led, gpio.LOW)
+            gpio.output(red_led, gpio.LOW)
+            print(f"Correct! You took {guess_count} guess(es).")
+            time.sleep(2)
+            break
+        elif user_guess < target_number:
+            gpio.output(yellow_led, gpio.HIGH)
+            print("Too low! Yellow LED is ON.")
+        else:
+            gpio.output(red_led, gpio.HIGH)
+            print("Too high! Red LED is ON.")
+
+        time.sleep(2)
+        gpio.output(green_led, gpio.LOW)
+        gpio.output(yellow_led, gpio.LOW)
+        gpio.output(red_led, gpio.LOW)
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\``,
+        quiz: [
+          { question: "What Python module generates random numbers?", options: ["math", "random", "os", "sys"], correctIndex: 1 },
+          { question: "In the math quiz project, what happens when the answer is correct?", options: ["Red LED turns on", "Both LEDs turn on", "Green LED turns on", "Buzzer sounds"], correctIndex: 2 },
+        ],
+      },
+      {
+        id: "rpi25-03",
+        title: "Traffic Light & RGB LEDs (R6–R8)",
+        duration: "30 min",
+        content: `# Traffic Light & RGB LEDs
+
+## R6. Traffic Light Simulation
+
+Cycle through green → yellow → red like a real traffic light.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+green_led = 21
+yellow_led = 16
+red_led = 12
+
+gpio.setmode(gpio.BCM)
+gpio.setup(red_led, gpio.OUT)
+gpio.setup(yellow_led, gpio.OUT)
+gpio.setup(green_led, gpio.OUT)
+
+try:
+    while True:
+        gpio.output(green_led, gpio.HIGH)
+        print("Green Light - GO")
+        time.sleep(5)
+
+        gpio.output(green_led, gpio.LOW)
+        gpio.output(yellow_led, gpio.HIGH)
+        print("Yellow Light - SLOW DOWN")
+        time.sleep(2)
+
+        gpio.output(yellow_led, gpio.LOW)
+        gpio.output(red_led, gpio.HIGH)
+        print("Red Light - STOP")
+        time.sleep(5)
+
+        gpio.output(red_led, gpio.LOW)
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R7. RGB LED Colors
+
+Cycle through 7 colors using a single RGB LED.
+
+### Components
+- RGB LED (Common Cathode)
+- Breadboard & jumper wires
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+red_pin = 21
+green_pin = 20
+blue_pin = 16
+
+gpio.setmode(gpio.BCM)
+gpio.setup(red_pin, gpio.OUT)
+gpio.setup(green_pin, gpio.OUT)
+gpio.setup(blue_pin, gpio.OUT)
+
+try:
+    while True:
+        # Red
+        gpio.output(red_pin, gpio.HIGH)
+        gpio.output(green_pin, gpio.LOW)
+        gpio.output(blue_pin, gpio.LOW)
+        print("Red"); time.sleep(1)
+
+        # Green
+        gpio.output(red_pin, gpio.LOW)
+        gpio.output(green_pin, gpio.HIGH)
+        print("Green"); time.sleep(1)
+
+        # Blue
+        gpio.output(green_pin, gpio.LOW)
+        gpio.output(blue_pin, gpio.HIGH)
+        print("Blue"); time.sleep(1)
+
+        # Yellow (R+G)
+        gpio.output(red_pin, gpio.HIGH)
+        gpio.output(green_pin, gpio.HIGH)
+        gpio.output(blue_pin, gpio.LOW)
+        print("Yellow"); time.sleep(1)
+
+        # Magenta (R+B)
+        gpio.output(green_pin, gpio.LOW)
+        gpio.output(blue_pin, gpio.HIGH)
+        print("Magenta"); time.sleep(1)
+
+        # Cyan (G+B)
+        gpio.output(red_pin, gpio.LOW)
+        gpio.output(green_pin, gpio.HIGH)
+        print("Cyan"); time.sleep(1)
+
+        # White (R+G+B)
+        gpio.output(red_pin, gpio.HIGH)
+        print("White"); time.sleep(1)
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R8. User Input-Controlled RGB LED
+
+Let the user choose colors by typing letters.
+
+\`\`\`python
+import RPi.GPIO as gpio
+
+red_pin = 21
+green_pin = 20
+blue_pin = 16
+
+gpio.setmode(gpio.BCM)
+gpio.setup(red_pin, gpio.OUT)
+gpio.setup(green_pin, gpio.OUT)
+gpio.setup(blue_pin, gpio.OUT)
+
+colors = {
+    "r": (1,0,0), "g": (0,1,0), "b": (0,0,1),
+    "y": (1,1,0), "m": (1,0,1), "c": (0,1,1), "w": (1,1,1)
+}
+
+try:
+    while True:
+        user_input = input("Enter color (r,g,b,y,m,c,w): ").lower()
+        if user_input in colors:
+            r, g, b = colors[user_input]
+            gpio.output(red_pin, r)
+            gpio.output(green_pin, g)
+            gpio.output(blue_pin, b)
+        else:
+            print("Invalid input!")
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\``,
+        quiz: [
+          { question: "How do you create yellow with an RGB LED?", options: ["Red + Blue", "Red + Green", "Green + Blue", "All three colors"], correctIndex: 1 },
+          { question: "In a Common Cathode RGB LED, the common pin connects to:", options: ["5V", "3.3V", "GND", "GPIO pin"], correctIndex: 2 },
+          { question: "What is the traffic light sequence?", options: ["Red → Green → Yellow", "Green → Yellow → Red", "Yellow → Red → Green", "Green → Red → Yellow"], correctIndex: 1 },
+        ],
+      },
+      {
+        id: "rpi25-04",
+        title: "Buttons & Interactions (R9–R12)",
+        duration: "30 min",
+        content: `# Buttons & Interactions
+
+## R9. Button-Controlled LED
+
+LED turns on while the button is pressed.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+led_pin = 21
+button_pin = 16
+
+gpio.setmode(gpio.BCM)
+gpio.setup(led_pin, gpio.OUT)
+gpio.setup(button_pin, gpio.IN, pull_up_down=gpio.PUD_UP)
+
+try:
+    while True:
+        if gpio.input(button_pin) == 0:
+            gpio.output(led_pin, gpio.HIGH)
+            print("Button Pressed - LED ON")
+        else:
+            gpio.output(led_pin, gpio.LOW)
+            print("Button Released - LED OFF")
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+### Key Concept: Pull-Up Resistor
+\`pull_up_down=gpio.PUD_UP\` enables an internal pull-up resistor. The button reads HIGH when not pressed and LOW when pressed.
+
+---
+
+## R10. Dual-Button LED Control
+
+One button turns the LED ON, another turns it OFF.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+led_pin = 21
+button_on = 16
+button_off = 12
+
+gpio.setmode(gpio.BCM)
+gpio.setup(led_pin, gpio.OUT)
+gpio.setup(button_on, gpio.IN, pull_up_down=gpio.PUD_UP)
+gpio.setup(button_off, gpio.IN, pull_up_down=gpio.PUD_UP)
+
+try:
+    while True:
+        if gpio.input(button_on) == gpio.LOW:
+            gpio.output(led_pin, gpio.HIGH)
+            print("ON Button Pressed")
+
+        if gpio.input(button_off) == gpio.LOW:
+            gpio.output(led_pin, gpio.LOW)
+            print("OFF Button Pressed")
+
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R11. LED Toggle Switch
+
+Each button press toggles the LED state.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+led_pin = 21
+button_pin = 16
+
+gpio.setmode(gpio.BCM)
+gpio.setup(button_pin, gpio.IN, pull_up_down=gpio.PUD_UP)
+gpio.setup(led_pin, gpio.OUT)
+
+led_state = False
+
+try:
+    while True:
+        if gpio.input(button_pin) == 0:
+            time.sleep(0.1)  # Debounce
+            while gpio.input(button_pin) == 0:
+                pass
+            led_state = not led_state
+            gpio.output(led_pin, led_state)
+            print("LED ON" if led_state else "LED OFF")
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R12. RGB LED Color Switcher
+
+Each button press generates a random RGB color.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+import random
+
+red_pin = 21
+green_pin = 20
+blue_pin = 16
+button_pin = 12
+
+gpio.setmode(gpio.BCM)
+gpio.setup(red_pin, gpio.OUT)
+gpio.setup(green_pin, gpio.OUT)
+gpio.setup(blue_pin, gpio.OUT)
+gpio.setup(button_pin, gpio.IN, pull_up_down=gpio.PUD_UP)
+
+try:
+    while True:
+        if gpio.input(button_pin) == 0:
+            time.sleep(0.1)
+            while gpio.input(button_pin) == 0:
+                pass
+            gpio.output(red_pin, random.randint(0, 1))
+            gpio.output(green_pin, random.randint(0, 1))
+            gpio.output(blue_pin, random.randint(0, 1))
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\``,
+        quiz: [
+          { question: "What does a pull-up resistor do?", options: ["Keeps the pin HIGH when the button is not pressed", "Keeps the pin LOW when the button is not pressed", "Increases voltage", "Controls motor speed"], correctIndex: 0 },
+          { question: "What is 'debouncing'?", options: ["Speeding up the button", "A small delay to avoid false triggers from mechanical bounce", "Resetting the GPIO", "Changing pin mode"], correctIndex: 1 },
+          { question: "In toggle mode, how is state tracked?", options: ["Using a counter", "Using a boolean variable that flips each press", "Using a timer", "Using an interrupt"], correctIndex: 1 },
+        ],
+      },
+      {
+        id: "rpi25-05",
+        title: "Buzzer, GUI & Bluetooth (R13–R18)",
+        duration: "40 min",
+        content: `# Buzzer, GUI & Bluetooth Control
+
+## R13. Raspberry Pi Buzzer Piano
+
+4 buttons play different musical notes through a buzzer using PWM.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+buzzer_pin = 21
+button_pins = [26, 19, 13, 6]
+notes = [262, 294, 330, 349]  # C, D, E, F
+
+gpio.setmode(gpio.BCM)
+gpio.setup(buzzer_pin, gpio.OUT)
+gpio.setup(button_pins, gpio.IN, pull_up_down=gpio.PUD_UP)
+
+buzzer = gpio.PWM(buzzer_pin, 1)
+
+try:
+    while True:
+        for i, button in enumerate(button_pins):
+            if gpio.input(button) == 0:
+                buzzer.ChangeFrequency(notes[i])
+                buzzer.start(50)
+                print(f"Playing Note {notes[i]} Hz")
+                time.sleep(0.2)
+                buzzer.stop()
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R14. GUI Button-Controlled LED (Tkinter)
+
+Control an LED with a graphical interface.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import tkinter as tk
+
+led_pin = 21
+gpio.setmode(gpio.BCM)
+gpio.setup(led_pin, gpio.OUT)
+
+def led_on():
+    gpio.output(led_pin, gpio.HIGH)
+    label.config(text="LED is ON")
+
+def led_off():
+    gpio.output(led_pin, gpio.LOW)
+    label.config(text="LED is OFF")
+
+window = tk.Tk()
+window.title("LED Controller")
+window.geometry("500x300")
+
+button_on = tk.Button(window, text="LED ON", bg="#b4dd1e",
+                      font=("Arial", 15), command=led_on)
+button_on.pack(pady=20)
+
+button_off = tk.Button(window, text="LED OFF", bg="#ff4444",
+                       font=("Arial", 15), command=led_off)
+button_off.pack(pady=20)
+
+label = tk.Label(window, text="LED is OFF", font=("Arial", 13))
+label.pack(pady=10)
+
+window.mainloop()
+\`\`\`
+
+---
+
+## R15. GUI Widgets-Controlled LED
+
+Advanced GUI with buttons, radio buttons, entry box, and brightness slider.
+
+Uses PWM for brightness control:
+
+\`\`\`python
+pwm = gpio.PWM(led_pin, 1000)  # 1000 Hz
+pwm.start(0)
+
+def set_brightness(val):
+    pwm.ChangeDutyCycle(int(val))
+\`\`\`
+
+---
+
+## R16. BlueDot App-Controlled LED
+
+Control LED wirelessly via Bluetooth using the BlueDot app.
+
+\`\`\`python
+import RPi.GPIO as gpio
+from bluedot import BlueDot
+from signal import pause
+
+led_pin = 21
+gpio.setmode(gpio.BCM)
+gpio.setup(led_pin, gpio.OUT)
+
+bd = BlueDot()
+
+def led_on():
+    gpio.output(led_pin, gpio.HIGH)
+
+def led_off():
+    gpio.output(led_pin, gpio.LOW)
+
+bd.when_pressed = led_on
+bd.when_released = led_off
+
+pause()
+\`\`\`
+
+---
+
+## R17–R18. BlueDot Multi-Button & RGB Control
+
+Create multi-button Bluetooth interfaces for ON/OFF and color selection using \`BlueDot(cols=4, rows=2)\`.`,
+        quiz: [
+          { question: "What does PWM stand for?", options: ["Power Width Mode", "Pulse Width Modulation", "Pin Write Method", "Periodic Wave Monitor"], correctIndex: 1 },
+          { question: "What Python library creates GUI windows on Raspberry Pi?", options: ["flask", "tkinter", "pygame", "bluedot"], correctIndex: 1 },
+          { question: "How does BlueDot communicate with the Raspberry Pi?", options: ["WiFi", "USB", "Bluetooth", "IR remote"], correctIndex: 2 },
+        ],
+      },
+      {
+        id: "rpi25-06",
+        title: "IoT & Sensors (R19–R24)",
+        duration: "40 min",
+        content: `# IoT & Sensors
+
+## R19. IoT LED Control Using Blynk App
+
+Control an LED from anywhere in the world using the Blynk IoT platform.
+
+\`\`\`python
+import RPi.GPIO as gpio
+from BlynkLib import Blynk
+import time
+
+BLYNK_AUTH = "YOUR_TOKEN_HERE"
+led_pin = 21
+
+gpio.setmode(gpio.BCM)
+gpio.setup(led_pin, gpio.OUT)
+
+blynk = Blynk(BLYNK_AUTH)
+
+@blynk.on("V0")
+def control_led(value):
+    if int(value[0]) == 1:
+        gpio.output(led_pin, gpio.HIGH)
+    else:
+        gpio.output(led_pin, gpio.LOW)
+
+while True:
+    blynk.run()
+    time.sleep(0.1)
+\`\`\`
+
+---
+
+## R20. IoT RGB LED Control Using Blynk
+
+Use a Blynk menu widget to select colors remotely.
+
+---
+
+## R21. Automatic Street Light Using LDR
+
+An LDR (Light Dependent Resistor) detects darkness and automatically turns on an LED.
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+ldr_pin = 21
+led_pin = 20
+
+gpio.setmode(gpio.BCM)
+gpio.setup(ldr_pin, gpio.IN)
+gpio.setup(led_pin, gpio.OUT)
+
+try:
+    while True:
+        if gpio.input(ldr_pin) == 1:  # Dark
+            gpio.output(led_pin, gpio.HIGH)
+            print("Dark detected - LED ON")
+        else:
+            gpio.output(led_pin, gpio.LOW)
+            print("Light detected - LED OFF")
+        time.sleep(1)
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R22. Morning Wake-Up Alarm Using LDR
+
+When the LDR detects morning light, a buzzer alarm sounds. Press a button to stop it.
+
+---
+
+## R23. PIR Motion Sensor-Activated LED
+
+\`\`\`python
+import RPi.GPIO as gpio
+import time
+
+pir_pin = 21
+led_pin = 20
+
+gpio.setmode(gpio.BCM)
+gpio.setup(pir_pin, gpio.IN)
+gpio.setup(led_pin, gpio.OUT)
+
+try:
+    while True:
+        if gpio.input(pir_pin) == 1:
+            gpio.output(led_pin, gpio.HIGH)
+            print("Motion Detected - LED ON")
+        else:
+            gpio.output(led_pin, gpio.LOW)
+            print("No Motion - LED OFF")
+        time.sleep(0.5)
+
+except KeyboardInterrupt:
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R24. Intruder Detection & Alarm System
+
+Combines PIR sensor + red/green LEDs + buzzer + button to create a full security system.
+
+- PIR detects motion → red LED + buzzer ON
+- Button press → stops alarm, returns to safe mode (green LED)`,
+        quiz: [
+          { question: "What does LDR stand for?", options: ["Light Dependent Resistor", "Low Data Rate", "Linear Digital Receiver", "LED Driver Relay"], correctIndex: 0 },
+          { question: "What type of sensor detects motion?", options: ["LDR", "PIR", "LM35", "Potentiometer"], correctIndex: 1 },
+          { question: "What does the Blynk platform enable?", options: ["Local-only control", "IoT control from anywhere via the internet", "Direct USB control", "Bluetooth control"], correctIndex: 1 },
+        ],
+      },
+      {
+        id: "rpi25-07",
+        title: "DC Motors & Robot Car (R25–R31)",
+        duration: "45 min",
+        content: `# DC Motors & Robot Car
+
+## R25. Button-Controlled DC Motor
+
+Control motor direction with 3 buttons: forward, backward, stop.
+
+\`\`\`python
+import time
+import RPi.GPIO as gpio
+from Raspi_MotorHAT import Raspi_MotorHAT
+
+mh = Raspi_MotorHAT(addr=0x6f)
+motor = mh.getMotor(3)
+motor.setSpeed(150)
+
+forward_button = 21
+backward_button = 16
+stop_button = 12
+
+gpio.setmode(gpio.BCM)
+gpio.setup(forward_button, gpio.IN, pull_up_down=gpio.PUD_UP)
+gpio.setup(backward_button, gpio.IN, pull_up_down=gpio.PUD_UP)
+gpio.setup(stop_button, gpio.IN, pull_up_down=gpio.PUD_UP)
+
+try:
+    while True:
+        if gpio.input(forward_button) == 0:
+            motor.run(Raspi_MotorHAT.FORWARD)
+        elif gpio.input(backward_button) == 0:
+            motor.run(Raspi_MotorHAT.BACKWARD)
+        elif gpio.input(stop_button) == 0:
+            motor.run(Raspi_MotorHAT.RELEASE)
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    motor.run(Raspi_MotorHAT.RELEASE)
+    gpio.cleanup()
+\`\`\`
+
+---
+
+## R26. Keyboard-Controlled DC Motor
+
+Use arrow keys to control the motor using \`pynput\` library.
+
+---
+
+## R27. BlueDot App-Controlled DC Motor
+
+Swipe up/down on BlueDot to control motor direction via Bluetooth.
+
+---
+
+## R28. Robot Car Assembly & Movements
+
+### 4-Motor Robot Car Setup
+
+\`\`\`python
+from Raspi_MotorHAT import Raspi_MotorHAT
+import time
+
+mh = Raspi_MotorHAT(addr=0x6f)
+
+rightFront = mh.getMotor(1)
+rightBack = mh.getMotor(2)
+leftFront = mh.getMotor(3)
+leftBack = mh.getMotor(4)
+
+speed = 150
+for m in [rightFront, rightBack, leftFront, leftBack]:
+    m.setSpeed(speed)
+
+def move_forward():
+    for m in [rightFront, rightBack, leftFront, leftBack]:
+        m.run(Raspi_MotorHAT.FORWARD)
+
+def move_backward():
+    for m in [rightFront, rightBack, leftFront, leftBack]:
+        m.run(Raspi_MotorHAT.BACKWARD)
+
+def turn_left():
+    rightFront.run(Raspi_MotorHAT.BACKWARD)
+    rightBack.run(Raspi_MotorHAT.BACKWARD)
+    leftFront.run(Raspi_MotorHAT.FORWARD)
+    leftBack.run(Raspi_MotorHAT.FORWARD)
+
+def turn_right():
+    rightFront.run(Raspi_MotorHAT.FORWARD)
+    rightBack.run(Raspi_MotorHAT.FORWARD)
+    leftFront.run(Raspi_MotorHAT.BACKWARD)
+    leftBack.run(Raspi_MotorHAT.BACKWARD)
+
+def stop_motors():
+    for m in [rightFront, rightBack, leftFront, leftBack]:
+        m.run(Raspi_MotorHAT.RELEASE)
+\`\`\`
+
+---
+
+## R29. User Input-Controlled Robot
+Use w/a/s/d/x keyboard commands to drive the robot.
+
+## R30. Keyboard-Controlled Robot
+Use arrow keys with \`pynput\` for real-time control.
+
+## R31. GUI Button-Controlled Robot
+Tkinter GUI with directional buttons + keyboard bindings for driving.`,
+        quiz: [
+          { question: "What does the Raspi_MotorHAT library control?", options: ["LEDs", "DC Motors via an I2C HAT", "Servos", "Buzzers"], correctIndex: 1 },
+          { question: "How does a 4-wheel robot turn left?", options: ["All wheels go left", "Right wheels forward, left wheels backward", "All wheels stop", "Only left wheels move"], correctIndex: 1 },
+          { question: "What does motor.run(Raspi_MotorHAT.RELEASE) do?", options: ["Runs the motor forward", "Runs the motor backward", "Stops the motor", "Sets the motor speed"], correctIndex: 2 },
+        ],
+      },
+      {
+        id: "rpi25-08",
+        title: "IoT Robot & Advanced Projects (R32–R38)",
+        duration: "45 min",
+        content: `# IoT Robot & Advanced Projects
+
+## R32. BlueDot App-Controlled Robot
+
+Drive your robot car wirelessly using Bluetooth.
+
+\`\`\`python
+from bluedot import BlueDot
+from Raspi_MotorHAT import Raspi_MotorHAT
+
+mh = Raspi_MotorHAT(addr=0x6f)
+# ... setup 4 motors ...
+
+bd = BlueDot()
+
+def on_press(pos):
+    if pos.top:
+        move_forward()
+    elif pos.bottom:
+        move_backward()
+    elif pos.left:
+        turn_left()
+    elif pos.right:
+        turn_right()
+
+def on_release(pos):
+    stop_motors()
+
+bd.when_pressed = on_press
+bd.when_released = on_release
+\`\`\`
+
+---
+
+## R33. IoT Robot Control Using Blynk App
+
+Control the robot from anywhere using Blynk virtual pins (V1–V5).
+
+Each virtual pin maps to a direction: Forward, Backward, Left, Right, Stop.
+
+---
+
+## R34. Light-Following Robot
+
+Uses two LDR sensors to follow a light source.
+
+\`\`\`python
+import RPi.GPIO as GPIO
+from Raspi_MotorHAT import Raspi_MotorHAT
+
+GPIO.setmode(GPIO.BCM)
+left_sensor = 17
+right_sensor = 18
+GPIO.setup(left_sensor, GPIO.IN)
+GPIO.setup(right_sensor, GPIO.IN)
+
+while True:
+    left = GPIO.input(left_sensor)
+    right = GPIO.input(right_sensor)
+
+    if left == 0 and right == 0:
+        move_forward()    # Both detect light
+    elif left == 0:
+        turn_left()       # Light on left
+    elif right == 0:
+        turn_right()      # Light on right
+    else:
+        stop_motors()     # No light
+\`\`\`
+
+---
+
+## R35. Displaying Names on LCD
+
+\`\`\`python
+from RPLCD.i2c import CharLCD
+
+lcd = CharLCD(i2c_expander='PCF8574', address=0x27,
+              port=1, cols=16, rows=2, backlight_enabled=True)
+
+lcd.cursor_pos = (0, 0)
+lcd.write_string("Raspberry Pi")
+lcd.cursor_pos = (1, 0)
+lcd.write_string("Robotics")
+\`\`\`
+
+---
+
+## R36. User Input-Controlled LCD Display
+
+Accept user input and display it on the 16x2 LCD screen.
+
+## R37. Countdown Timer on LCD
+
+Display a countdown from 10 to 0, then beep the buzzer 3 times.
+
+## R38. Scrolling GUI Input Text on LCD
+
+Scroll long user-entered text across the LCD display.`,
+        quiz: [
+          { question: "How does the light-following robot decide direction?", options: ["Using ultrasonic sensors", "Using two LDR sensors comparing left and right light levels", "Using GPS", "Using a compass"], correctIndex: 1 },
+          { question: "What communication protocol does the I2C LCD use?", options: ["SPI", "UART", "I2C", "Bluetooth"], correctIndex: 2 },
+          { question: "What is the main advantage of Blynk over BlueDot?", options: ["Faster response", "Control from anywhere via internet, not just Bluetooth range", "Better graphics", "More buttons"], correctIndex: 1 },
+        ],
+      },
     ],
   },
 
@@ -85,11 +1072,9 @@ export const courses: Course[] = [
 4. Go to **Tools → Port** and select your USB port
 
 ## Your First Sketch
-Every Arduino program has two functions:
 
 \`\`\`cpp
 void setup() {
-  // Runs once when the board powers on
   Serial.begin(9600);
   Serial.println("Hello Arduino!");
 }
@@ -99,16 +1084,15 @@ void loop() {
 }
 \`\`\`
 
-## Uploading Code
-1. Connect Arduino via USB
-2. Click the **Upload** button (→ arrow)
-3. Open **Serial Monitor** (magnifying glass icon) to see output
-
 ## Understanding the Board
 - **Digital Pins (0-13)**: HIGH/LOW signals
 - **Analog Pins (A0-A5)**: Read 0-1023 values
 - **PWM Pins (~3,5,6,9,10,11)**: Simulate analog output
-- **5V / 3.3V / GND**: Power pins`
+- **5V / 3.3V / GND**: Power pins`,
+        quiz: [
+          { question: "What function runs once when the Arduino powers on?", options: ["loop()", "setup()", "main()", "init()"], correctIndex: 1 },
+          { question: "What range do analog pins read?", options: ["0-255", "0-1023", "0-100", "0-5"], correctIndex: 1 },
+        ],
       },
       {
         id: "ar-02", title: "LEDs, Buttons & Digital I/O", duration: "20 min",
@@ -119,9 +1103,7 @@ void loop() {
 \`\`\`cpp
 #define LED_PIN 13
 
-void setup() {
-  pinMode(LED_PIN, OUTPUT);
-}
+void setup() { pinMode(LED_PIN, OUTPUT); }
 
 void loop() {
   digitalWrite(LED_PIN, HIGH);
@@ -143,9 +1125,7 @@ void setup() {
 }
 
 void loop() {
-  int state = digitalRead(BUTTON_PIN);
-  // INPUT_PULLUP: LOW when pressed
-  if (state == LOW) {
+  if (digitalRead(BUTTON_PIN) == LOW) {
     digitalWrite(LED_PIN, HIGH);
   } else {
     digitalWrite(LED_PIN, LOW);
@@ -154,10 +1134,9 @@ void loop() {
 \`\`\`
 
 ## Traffic Light Project
-Wire 3 LEDs (red, yellow, green) and cycle through them:
 
 \`\`\`cpp
-int pins[] = {4, 3, 2}; // red, yellow, green
+int pins[] = {4, 3, 2};
 int durations[] = {3000, 1000, 3000};
 
 void setup() {
@@ -171,7 +1150,11 @@ void loop() {
     digitalWrite(pins[i], LOW);
   }
 }
-\`\`\``
+\`\`\``,
+        quiz: [
+          { question: "What does INPUT_PULLUP do?", options: ["Enables an internal pull-up resistor", "Sets pin as output", "Increases voltage", "Enables PWM"], correctIndex: 0 },
+          { question: "What does digitalWrite(pin, HIGH) do?", options: ["Reads the pin value", "Sets the pin to 5V", "Sets the pin to 0V", "Toggles the pin"], correctIndex: 1 },
+        ],
       },
       {
         id: "ar-03", title: "Analog Sensors & PWM", duration: "25 min",
@@ -181,7 +1164,7 @@ void loop() {
 
 \`\`\`cpp
 #define POT_PIN A0
-#define LED_PIN 9  // PWM pin
+#define LED_PIN 9
 
 void setup() {
   Serial.begin(9600);
@@ -189,197 +1172,88 @@ void setup() {
 }
 
 void loop() {
-  int val = analogRead(POT_PIN);  // 0-1023
+  int val = analogRead(POT_PIN);
   int brightness = map(val, 0, 1023, 0, 255);
   analogWrite(LED_PIN, brightness);
-
-  Serial.print("Pot: "); Serial.print(val);
-  Serial.print(" → Brightness: "); Serial.println(brightness);
   delay(50);
-}
-\`\`\`
-
-## Light Sensor (LDR)
-
-\`\`\`cpp
-#define LDR_PIN A0
-
-void setup() { Serial.begin(9600); }
-
-void loop() {
-  int light = analogRead(LDR_PIN);
-  Serial.print("Light level: ");
-  Serial.println(light);
-  // Dark: < 300, Bright: > 700
-  delay(200);
 }
 \`\`\`
 
 ## Temperature Sensor (TMP36)
 
 \`\`\`cpp
-#define TEMP_PIN A1
-
 void loop() {
-  int raw = analogRead(TEMP_PIN);
+  int raw = analogRead(A1);
   float voltage = raw * (5.0 / 1023.0);
   float tempC = (voltage - 0.5) * 100.0;
-  Serial.print("Temperature: ");
-  Serial.print(tempC);
-  Serial.println(" °C");
+  Serial.print("Temp: ");
+  Serial.println(tempC);
   delay(1000);
 }
-\`\`\``
+\`\`\``,
+        quiz: [
+          { question: "What does analogWrite() use to simulate analog output?", options: ["DAC", "PWM", "ADC", "SPI"], correctIndex: 1 },
+          { question: "What does map(val, 0, 1023, 0, 255) do?", options: ["Converts digital to analog", "Scales a value from one range to another", "Maps GPIO pins", "Creates a lookup table"], correctIndex: 1 },
+        ],
       },
       {
-        id: "ar-04", title: "Servo Motors & Sweeping", duration: "20 min",
-        content: `# Servo Motors & Sweeping
+        id: "ar-04", title: "Servo & DC Motors", duration: "25 min",
+        content: `# Servo & DC Motors
 
-## What is a Servo?
-A servo motor rotates to a precise angle (0–180°). It uses PWM signals for positioning.
-
-## Basic Servo Control
+## Servo Motor Control
 
 \`\`\`cpp
 #include <Servo.h>
-
 Servo myServo;
 
-void setup() {
-  myServo.attach(9);  // Signal pin
-}
+void setup() { myServo.attach(9); }
 
 void loop() {
-  // Sweep from 0 to 180
-  for (int angle = 0; angle <= 180; angle += 1) {
+  for (int angle = 0; angle <= 180; angle++) {
     myServo.write(angle);
     delay(15);
   }
-  // Sweep back
-  for (int angle = 180; angle >= 0; angle -= 1) {
+  for (int angle = 180; angle >= 0; angle--) {
     myServo.write(angle);
     delay(15);
   }
 }
 \`\`\`
 
-## Potentiometer-Controlled Servo
-
-\`\`\`cpp
-#include <Servo.h>
-
-Servo myServo;
-
-void setup() {
-  myServo.attach(9);
-}
-
-void loop() {
-  int val = analogRead(A0);
-  int angle = map(val, 0, 1023, 0, 180);
-  myServo.write(angle);
-  delay(15);
-}
-\`\`\`
-
-## Multi-Servo Robot Arm
-You can control multiple servos for a robotic arm:
-
-\`\`\`cpp
-Servo base, shoulder, elbow, gripper;
-
-void setup() {
-  base.attach(3);
-  shoulder.attach(5);
-  elbow.attach(6);
-  gripper.attach(9);
-}
-\`\`\``
-      },
-      {
-        id: "ar-05", title: "DC Motors & the L298N Driver", duration: "25 min",
-        content: `# DC Motors & the L298N Driver
-
-## L298N Motor Driver
-The L298N controls 2 DC motors with direction and speed.
-
-## Wiring
-- **ENA** → PWM pin (speed for Motor A)
-- **IN1, IN2** → Digital pins (direction for Motor A)
-- **ENB** → PWM pin (speed for Motor B)
-- **IN3, IN4** → Digital pins (direction for Motor B)
-
-## Code
+## DC Motor Control with L298N
 
 \`\`\`cpp
 #define ENA 10
 #define IN1 8
 #define IN2 9
-#define ENB 5
-#define IN3 7
-#define IN4 6
-
-void setup() {
-  pinMode(ENA, OUTPUT); pinMode(IN1, OUTPUT); pinMode(IN2, OUTPUT);
-  pinMode(ENB, OUTPUT); pinMode(IN3, OUTPUT); pinMode(IN4, OUTPUT);
-}
 
 void forward(int speed) {
-  digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
   analogWrite(ENA, speed);
-  analogWrite(ENB, speed);
-}
-
-void backward(int speed) {
-  digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH);
-  analogWrite(ENA, speed);
-  analogWrite(ENB, speed);
-}
-
-void turnLeft(int speed) {
-  digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
-  analogWrite(ENA, speed);
-  analogWrite(ENB, speed);
 }
 
 void stopMotors() {
   analogWrite(ENA, 0);
-  analogWrite(ENB, 0);
 }
-
-void loop() {
-  forward(200);
-  delay(2000);
-  turnLeft(150);
-  delay(500);
-  stopMotors();
-  delay(1000);
-}
-\`\`\``
+\`\`\``,
+        quiz: [
+          { question: "What is a servo motor's range of rotation?", options: ["0-90°", "0-180°", "0-360°", "0-270°"], correctIndex: 1 },
+          { question: "What does the L298N motor driver control?", options: ["Servo motors", "Stepper motors", "DC motor speed and direction", "LED brightness"], correctIndex: 2 },
+        ],
       },
       {
-        id: "ar-06", title: "Ultrasonic Sensor & Distance", duration: "20 min",
+        id: "ar-05", title: "Ultrasonic Sensor & Distance", duration: "20 min",
         content: `# Ultrasonic Sensor (HC-SR04)
 
 ## How It Works
 1. Send a 10μs pulse on TRIG
-2. Measure the echo duration on ECHO
-3. Convert to distance: distance = duration × 0.034 / 2
-
-## Code
+2. Measure echo duration on ECHO
+3. Distance = duration × 0.034 / 2
 
 \`\`\`cpp
 #define TRIG 7
 #define ECHO 6
-
-void setup() {
-  Serial.begin(9600);
-  pinMode(TRIG, OUTPUT);
-  pinMode(ECHO, INPUT);
-}
 
 float getDistance() {
   digitalWrite(TRIG, LOW);
@@ -396,110 +1270,36 @@ void loop() {
   Serial.print("Distance: ");
   Serial.print(dist);
   Serial.println(" cm");
-
-  if (dist < 15) {
-    Serial.println("⚠️ OBSTACLE DETECTED!");
-  }
   delay(200);
 }
-\`\`\`
-
-## Parking Sensor Project
-Use a buzzer that beeps faster as objects get closer:
-
-\`\`\`cpp
-#define BUZZER 3
-
-void loop() {
-  float dist = getDistance();
-  if (dist < 50) {
-    int interval = map(dist, 5, 50, 50, 500);
-    tone(BUZZER, 1000, 100);
-    delay(interval);
-  }
-}
-\`\`\``
+\`\`\``,
+        quiz: [
+          { question: "What does the HC-SR04 measure?", options: ["Temperature", "Light level", "Distance using ultrasonic waves", "Humidity"], correctIndex: 2 },
+          { question: "How is distance calculated from echo duration?", options: ["duration × 0.034 / 2", "duration × speed_of_light", "duration / 1000", "duration × 2"], correctIndex: 0 },
+        ],
       },
       {
-        id: "ar-07", title: "Building an Obstacle-Avoiding Robot", duration: "35 min",
+        id: "ar-06", title: "Obstacle-Avoiding Robot", duration: "35 min",
         content: `# Building an Obstacle-Avoiding Robot
 
 ## Components
-- Arduino Uno
-- L298N motor driver + 2 DC motors
-- HC-SR04 ultrasonic sensor
-- Servo motor (to sweep the sensor)
+- Arduino Uno, L298N, 2 DC motors
+- HC-SR04 ultrasonic sensor + servo
 - Chassis, wheels, battery pack
 
-## Full Code
+## Algorithm
+1. Drive forward while no obstacle within 25 cm
+2. When blocked, stop and look left (180°) and right (0°)
+3. Turn toward direction with more clearance
+4. Resume driving
 
 \`\`\`cpp
 #include <Servo.h>
 
-// Motor pins
-#define ENA 10
-#define IN1 8
-#define IN2 9
-#define ENB 5
-#define IN3 7
-#define IN4 6
-
-// Ultrasonic
-#define TRIG 11
-#define ECHO 12
-
 Servo sweepServo;
-
-float getDistance() {
-  digitalWrite(TRIG, LOW); delayMicroseconds(2);
-  digitalWrite(TRIG, HIGH); delayMicroseconds(10);
-  digitalWrite(TRIG, LOW);
-  long dur = pulseIn(ECHO, HIGH, 20000);
-  if (dur == 0) return 999;
-  return dur * 0.034 / 2.0;
-}
-
-void forward(int spd) {
-  digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
-  analogWrite(ENA, spd); analogWrite(ENB, spd);
-}
-
-void turnRight(int spd) {
-  digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH);
-  analogWrite(ENA, spd); analogWrite(ENB, spd);
-}
-
-void turnLeft(int spd) {
-  digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
-  analogWrite(ENA, spd); analogWrite(ENB, spd);
-}
-
-void stopMotors() {
-  analogWrite(ENA, 0); analogWrite(ENB, 0);
-}
-
-float lookDirection(int angle) {
-  sweepServo.write(angle);
-  delay(400);
-  return getDistance();
-}
-
-void setup() {
-  Serial.begin(9600);
-  sweepServo.attach(3);
-  sweepServo.write(90); // Center
-  pinMode(TRIG, OUTPUT); pinMode(ECHO, INPUT);
-  pinMode(ENA, OUTPUT); pinMode(IN1, OUTPUT); pinMode(IN2, OUTPUT);
-  pinMode(ENB, OUTPUT); pinMode(IN3, OUTPUT); pinMode(IN4, OUTPUT);
-  delay(1000);
-}
 
 void loop() {
   float dist = getDistance();
-  Serial.print("Front: "); Serial.println(dist);
 
   if (dist > 25) {
     forward(180);
@@ -510,10 +1310,6 @@ void loop() {
     float leftDist = lookDirection(180);
     float rightDist = lookDirection(0);
     sweepServo.write(90);
-    delay(200);
-
-    Serial.print("L: "); Serial.print(leftDist);
-    Serial.print(" R: "); Serial.println(rightDist);
 
     if (rightDist > leftDist) {
       turnRight(180);
@@ -524,16 +1320,14 @@ void loop() {
     stopMotors();
   }
 }
-\`\`\`
-
-## How It Works
-1. Drive forward while no obstacle within 25 cm
-2. When blocked, stop and look left (180°) and right (0°)
-3. Turn toward the direction with more clearance
-4. Resume driving`
+\`\`\``,
+        quiz: [
+          { question: "Why does the robot use a servo with the ultrasonic sensor?", options: ["To power the sensor", "To sweep and look left/right for obstacles", "To mount the battery", "To control motor speed"], correctIndex: 1 },
+          { question: "What threshold distance triggers obstacle avoidance?", options: ["50 cm", "25 cm", "10 cm", "100 cm"], correctIndex: 1 },
+        ],
       },
       {
-        id: "ar-08", title: "IR Remote & Bluetooth Control", duration: "25 min",
+        id: "ar-07", title: "IR Remote & Bluetooth Control", duration: "25 min",
         content: `# IR Remote & Bluetooth Control
 
 ## IR Remote Control
@@ -541,47 +1335,30 @@ void loop() {
 \`\`\`cpp
 #include <IRremote.h>
 
-#define IR_PIN 4
-
-void setup() {
-  Serial.begin(9600);
-  IrReceiver.begin(IR_PIN);
-}
-
 void loop() {
   if (IrReceiver.decode()) {
     unsigned long code = IrReceiver.decodedIRData.decodedRawData;
-    Serial.println(code, HEX);
-
     switch (code) {
-      case 0xE718FF00: forward(200); break;   // UP
-      case 0xAD52FF00: backward(200); break;  // DOWN
-      case 0xF708FF00: turnLeft(150); break;  // LEFT
-      case 0xA55AFF00: turnRight(150); break; // RIGHT
-      case 0xE31CFF00: stopMotors(); break;   // OK
+      case 0xE718FF00: forward(200); break;
+      case 0xAD52FF00: backward(200); break;
+      case 0xF708FF00: turnLeft(150); break;
+      case 0xA55AFF00: turnRight(150); break;
+      case 0xE31CFF00: stopMotors(); break;
     }
     IrReceiver.resume();
   }
 }
 \`\`\`
 
-## Bluetooth Control with HC-05
+## Bluetooth with HC-05
 
 \`\`\`cpp
 #include <SoftwareSerial.h>
-
-SoftwareSerial BT(2, 3); // RX, TX
-
-void setup() {
-  Serial.begin(9600);
-  BT.begin(9600);
-}
+SoftwareSerial BT(2, 3);
 
 void loop() {
   if (BT.available()) {
     char cmd = BT.read();
-    Serial.print("Received: "); Serial.println(cmd);
-
     switch (cmd) {
       case 'F': forward(200); break;
       case 'B': backward(200); break;
@@ -591,513 +1368,112 @@ void loop() {
     }
   }
 }
-\`\`\`
-
-## Mobile App Control
-Use a Bluetooth terminal app on your phone and send single characters (F, B, L, R, S) to control your robot wirelessly!`
+\`\`\``,
+        quiz: [
+          { question: "What module is used for Bluetooth serial communication on Arduino?", options: ["ESP32", "HC-05", "NRF24L01", "ADS1115"], correctIndex: 1 },
+          { question: "What does IrReceiver.resume() do?", options: ["Stops the receiver", "Prepares to receive the next IR signal", "Sends an IR signal", "Resets the Arduino"], correctIndex: 1 },
+        ],
       },
     ],
   },
 
   // ═══════════════════════════════════════════════════════
-  // RASPBERRY PI ROBOTICS 2025
-  // ═══════════════════════════════════════════════════════
-  {
-    id: "rpi-robotics",
-    title: "Raspberry Pi Robotics 2025",
-    path: "Robotics",
-    level: "Intermediate",
-    description: "Build intelligent robots with Raspberry Pi — GPIO, camera, motor control, and computer vision.",
-    prerequisites: ["robot-101"],
-    lessons: [
-      {
-        id: "rpi-01", title: "Raspberry Pi Setup & GPIO Basics", duration: "20 min",
-        content: `# Raspberry Pi Setup & GPIO Basics
-
-## Setting Up Your Pi
-1. Flash Raspberry Pi OS onto a microSD card using Raspberry Pi Imager
-2. Insert card, connect keyboard, mouse, monitor
-3. Boot and complete initial setup
-4. Open a terminal and update:
-
-\`\`\`bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install python3-gpiozero python3-pip -y
-\`\`\`
-
-## GPIO Pin Layout
-The Raspberry Pi has 40 GPIO pins. Key pins:
-- **3.3V / 5V** power pins
-- **GND** ground pins
-- **GPIO 2-27** programmable pins
-- Some support **PWM, I2C, SPI, UART**
-
-## Blink an LED with Python
-
-\`\`\`python
-from gpiozero import LED
-from time import sleep
-
-led = LED(17)  # GPIO 17
-
-while True:
-    led.on()
-    sleep(1)
-    led.off()
-    sleep(1)
-\`\`\`
-
-## Reading a Button
-
-\`\`\`python
-from gpiozero import Button, LED
-
-button = Button(2)
-led = LED(17)
-
-button.when_pressed = led.on
-button.when_released = led.off
-
-from signal import pause
-pause()
-\`\`\``
-      },
-      {
-        id: "rpi-02", title: "Motor Control with Python", duration: "25 min",
-        content: `# Motor Control with Python
-
-## Using L298N with Raspberry Pi
-
-\`\`\`python
-from gpiozero import Motor
-from time import sleep
-
-# Motor(forward_pin, backward_pin)
-motor_left = Motor(forward=17, backward=18)
-motor_right = Motor(forward=22, backward=23)
-
-def forward(speed=1):
-    motor_left.forward(speed)
-    motor_right.forward(speed)
-
-def backward(speed=1):
-    motor_left.backward(speed)
-    motor_right.backward(speed)
-
-def turn_left(speed=0.7):
-    motor_left.backward(speed)
-    motor_right.forward(speed)
-
-def turn_right(speed=0.7):
-    motor_left.forward(speed)
-    motor_right.backward(speed)
-
-def stop():
-    motor_left.stop()
-    motor_right.stop()
-
-# Test drive
-forward()
-sleep(2)
-turn_left()
-sleep(0.5)
-stop()
-\`\`\`
-
-## PWM Speed Control
-The Motor class from gpiozero supports speed values 0.0–1.0:
-
-\`\`\`python
-motor_left.forward(0.5)  # 50% speed
-motor_left.forward(1.0)  # Full speed
-\`\`\``
-      },
-      {
-        id: "rpi-03", title: "Ultrasonic & IR Sensors", duration: "20 min",
-        content: `# Sensors on Raspberry Pi
-
-## HC-SR04 Ultrasonic Sensor
-
-\`\`\`python
-from gpiozero import DistanceSensor
-from time import sleep
-
-sensor = DistanceSensor(echo=24, trigger=25)
-
-while True:
-    distance = sensor.distance * 100  # Convert to cm
-    print(f"Distance: {distance:.1f} cm")
-    if distance < 15:
-        print("⚠️ Obstacle!")
-    sleep(0.2)
-\`\`\`
-
-## IR Line Sensor
-
-\`\`\`python
-from gpiozero import LineSensor
-
-left_sensor = LineSensor(5)
-right_sensor = LineSensor(6)
-
-def on_line():
-    print("On line!")
-
-def off_line():
-    print("Off line!")
-
-left_sensor.when_line = on_line
-left_sensor.when_no_line = off_line
-
-from signal import pause
-pause()
-\`\`\`
-
-## Combining Sensors for Navigation
-
-\`\`\`python
-while True:
-    dist = sensor.distance * 100
-    if dist < 20:
-        stop()
-        sleep(0.3)
-        turn_right(0.6)
-        sleep(0.5)
-    else:
-        forward(0.7)
-    sleep(0.1)
-\`\`\``
-      },
-      {
-        id: "rpi-04", title: "Camera Module & Image Capture", duration: "25 min",
-        content: `# Camera Module & Image Capture
-
-## Enable the Camera
-\`\`\`bash
-sudo raspi-config
-# Interface Options → Camera → Enable
-# Reboot
-\`\`\`
-
-## Capture Images with Python
-
-\`\`\`python
-from picamera2 import Picamera2
-import time
-
-camera = Picamera2()
-config = camera.create_still_configuration()
-camera.configure(config)
-camera.start()
-time.sleep(2)  # Warm up
-
-camera.capture_file("photo.jpg")
-print("Photo saved!")
-camera.stop()
-\`\`\`
-
-## Live Video Preview
-
-\`\`\`python
-from picamera2 import Picamera2
-import time
-
-camera = Picamera2()
-config = camera.create_preview_configuration()
-camera.configure(config)
-camera.start_preview(True)
-camera.start()
-
-time.sleep(30)  # Preview for 30 seconds
-camera.stop()
-\`\`\`
-
-## Time-Lapse Photography
-
-\`\`\`python
-for i in range(100):
-    camera.capture_file(f"timelapse_{i:04d}.jpg")
-    time.sleep(60)  # Every minute
-\`\`\``
-      },
-      {
-        id: "rpi-05", title: "Web-Controlled Robot", duration: "30 min",
-        content: `# Web-Controlled Robot
-
-## Flask Web Server for Robot Control
-
-\`\`\`python
-from flask import Flask, render_template_string
-from gpiozero import Motor
-
-app = Flask(__name__)
-motor_l = Motor(17, 18)
-motor_r = Motor(22, 23)
-
-HTML = """
-<!DOCTYPE html>
-<html><body style="text-align:center; font-family:sans-serif;">
-<h1>🤖 Robot Control</h1>
-<a href="/forward"><button style="font-size:24px;padding:20px;">⬆️ Forward</button></a><br><br>
-<a href="/left"><button style="font-size:24px;padding:20px;">⬅️ Left</button></a>
-<a href="/stop"><button style="font-size:24px;padding:20px;">🛑 Stop</button></a>
-<a href="/right"><button style="font-size:24px;padding:20px;">➡️ Right</button></a><br><br>
-<a href="/backward"><button style="font-size:24px;padding:20px;">⬇️ Backward</button></a>
-</body></html>
-"""
-
-@app.route("/")
-def index():
-    return render_template_string(HTML)
-
-@app.route("/forward")
-def forward():
-    motor_l.forward(); motor_r.forward()
-    return render_template_string(HTML)
-
-@app.route("/backward")
-def backward():
-    motor_l.backward(); motor_r.backward()
-    return render_template_string(HTML)
-
-@app.route("/left")
-def left():
-    motor_l.backward(); motor_r.forward()
-    return render_template_string(HTML)
-
-@app.route("/right")
-def right():
-    motor_l.forward(); motor_r.backward()
-    return render_template_string(HTML)
-
-@app.route("/stop")
-def stop():
-    motor_l.stop(); motor_r.stop()
-    return render_template_string(HTML)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-\`\`\`
-
-Access from any device on the same network: \`http://<pi-ip>:5000\``
-      },
-      {
-        id: "rpi-06", title: "Autonomous Navigation Project", duration: "35 min",
-        content: `# Autonomous Navigation Project
-
-## Combining Everything
-
-\`\`\`python
-from gpiozero import Motor, DistanceSensor, Servo
-from time import sleep
-
-motor_l = Motor(17, 18)
-motor_r = Motor(22, 23)
-sensor = DistanceSensor(echo=24, trigger=25)
-sweep_servo = Servo(12)
-
-def forward(spd=0.7):
-    motor_l.forward(spd)
-    motor_r.forward(spd)
-
-def stop():
-    motor_l.stop()
-    motor_r.stop()
-
-def turn_left(dur=0.5):
-    motor_l.backward(0.6)
-    motor_r.forward(0.6)
-    sleep(dur)
-
-def turn_right(dur=0.5):
-    motor_l.forward(0.6)
-    motor_r.backward(0.6)
-    sleep(dur)
-
-def look(direction):
-    if direction == "left":
-        sweep_servo.min()
-    elif direction == "right":
-        sweep_servo.max()
-    else:
-        sweep_servo.mid()
-    sleep(0.5)
-    return sensor.distance * 100
-
-try:
-    while True:
-        dist = sensor.distance * 100
-        print(f"Front: {dist:.0f} cm")
-
-        if dist > 25:
-            forward()
-        else:
-            stop()
-            sleep(0.2)
-            left_dist = look("left")
-            right_dist = look("right")
-            look("center")
-
-            print(f"L: {left_dist:.0f}  R: {right_dist:.0f}")
-
-            if right_dist > left_dist:
-                turn_right()
-            else:
-                turn_left()
-
-        sleep(0.1)
-except KeyboardInterrupt:
-    stop()
-    print("Robot stopped.")
-\`\`\`
-
-## Challenges
-1. Add a line-following mode using IR sensors
-2. Implement wall-following algorithm
-3. Add camera-based object detection
-4. Log navigation path to a CSV file`
-      },
-    ],
-  },
-
-  // ═══════════════════════════════════════════════════════
-  // OPENCV 2025
+  // OPENCV COMPUTER VISION 2025
   // ═══════════════════════════════════════════════════════
   {
     id: "opencv-2025",
     title: "OpenCV Computer Vision 2025",
     path: "AI",
     level: "Intermediate",
-    description: "Master computer vision with OpenCV — image processing, face detection, object tracking, and more.",
+    description: "Master computer vision with OpenCV & Python — image processing, face detection, object tracking & more.",
     prerequisites: [],
     lessons: [
       {
-        id: "cv-01", title: "OpenCV Installation & Basics", duration: "15 min",
-        content: `# OpenCV Installation & Basics
+        id: "cv-01", title: "OpenCV Setup & Image Basics", duration: "20 min",
+        content: `# OpenCV Setup & Image Basics
 
-## Installing OpenCV
+## Installation
 
 \`\`\`bash
-pip install opencv-python opencv-python-headless numpy
+pip install opencv-python numpy
 \`\`\`
 
 ## Loading & Displaying Images
 
 \`\`\`python
 import cv2
-import numpy as np
 
-# Load an image
 img = cv2.imread("photo.jpg")
 print(f"Shape: {img.shape}")  # (height, width, channels)
 
-# Display
 cv2.imshow("Image", img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
-# Save
-cv2.imwrite("output.jpg", img)
 \`\`\`
 
 ## Color Spaces
 
 \`\`\`python
-# BGR to Grayscale
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-# BGR to HSV (useful for color detection)
 hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-
-# BGR to RGB (for matplotlib)
-rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 \`\`\`
 
 ## Drawing on Images
 
 \`\`\`python
-# Line
-cv2.line(img, (0, 0), (200, 200), (0, 255, 0), 2)
-
-# Rectangle
-cv2.rectangle(img, (50, 50), (200, 200), (255, 0, 0), 3)
-
-# Circle
-cv2.circle(img, (150, 150), 50, (0, 0, 255), -1)
-
-# Text
-cv2.putText(img, "Hello!", (10, 30),
-            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-\`\`\``
+cv2.rectangle(img, (50,50), (200,200), (0,255,0), 2)
+cv2.circle(img, (300,300), 50, (0,0,255), -1)
+cv2.putText(img, "Hello", (100,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+\`\`\``,
+        quiz: [
+          { question: "What color format does OpenCV use by default?", options: ["RGB", "BGR", "HSV", "CMYK"], correctIndex: 1 },
+          { question: "What does img.shape return?", options: ["(width, height)", "(height, width, channels)", "(channels, height, width)", "(width, height, depth)"], correctIndex: 1 },
+        ],
       },
       {
-        id: "cv-02", title: "Image Processing & Filters", duration: "25 min",
-        content: `# Image Processing & Filters
+        id: "cv-02", title: "Image Filtering & Transformations", duration: "25 min",
+        content: `# Image Filtering & Transformations
 
-## Blurring
+## Blur & Smoothing
 
 \`\`\`python
-# Gaussian Blur
-blurred = cv2.GaussianBlur(img, (15, 15), 0)
-
-# Median Blur (good for salt & pepper noise)
+blurred = cv2.GaussianBlur(img, (5, 5), 0)
 median = cv2.medianBlur(img, 5)
-
-# Bilateral Filter (preserves edges)
-bilateral = cv2.bilateralFilter(img, 9, 75, 75)
 \`\`\`
 
 ## Edge Detection
 
 \`\`\`python
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-# Canny edge detector
-edges = cv2.Canny(gray, 50, 150)
-
-# Sobel operator
-sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=5)
-sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=5)
+edges = cv2.Canny(gray, 100, 200)
 \`\`\`
 
 ## Thresholding
 
 \`\`\`python
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-# Simple threshold
 _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
-
-# Adaptive threshold
 adaptive = cv2.adaptiveThreshold(gray, 255,
     cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-
-# Otsu's threshold
-_, otsu = cv2.threshold(gray, 0, 255,
-    cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 \`\`\`
 
-## Morphological Operations
+## Resizing & Rotation
 
 \`\`\`python
-kernel = np.ones((5, 5), np.uint8)
+resized = cv2.resize(img, (400, 300))
 
-# Remove noise
-opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-
-# Fill holes
-closing = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-
-# Dilate and Erode
-dilated = cv2.dilate(thresh, kernel, iterations=1)
-eroded = cv2.erode(thresh, kernel, iterations=1)
-\`\`\``
+(h, w) = img.shape[:2]
+M = cv2.getRotationMatrix2D((w//2, h//2), 45, 1.0)
+rotated = cv2.warpAffine(img, M, (w, h))
+\`\`\``,
+        quiz: [
+          { question: "What algorithm does cv2.Canny() implement?", options: ["Blur filter", "Edge detection", "Face detection", "Color conversion"], correctIndex: 1 },
+          { question: "What does thresholding do?", options: ["Blurs the image", "Converts image to binary (black/white)", "Detects edges", "Resizes the image"], correctIndex: 1 },
+        ],
       },
       {
         id: "cv-03", title: "Face Detection with Haar Cascades", duration: "25 min",
-        content: `# Face Detection with Haar Cascades
+        content: `# Face Detection
 
-## Loading the Cascade
+## Using Haar Cascades
 
 \`\`\`python
 import cv2
@@ -1105,51 +1481,17 @@ import cv2
 face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
-eye_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_eye.xml"
-)
-\`\`\`
 
-## Detecting Faces in an Image
-
-\`\`\`python
-img = cv2.imread("people.jpg")
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-faces = face_cascade.detectMultiScale(
-    gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
-)
-
-for (x, y, w, h) in faces:
-    cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-
-    # Detect eyes within face region
-    roi_gray = gray[y:y+h, x:x+w]
-    roi_color = img[y:y+h, x:x+w]
-    eyes = eye_cascade.detectMultiScale(roi_gray)
-    for (ex, ey, ew, eh) in eyes:
-        cv2.circle(roi_color, (ex+ew//2, ey+eh//2), ew//2, (255, 0, 0), 2)
-
-print(f"Found {len(faces)} face(s)")
-cv2.imshow("Faces", img)
-cv2.waitKey(0)
-\`\`\`
-
-## Real-Time Face Detection
-
-\`\`\`python
 cap = cv2.VideoCapture(0)
 
 while True:
     ret, frame = cap.read()
-    if not ret:
-        break
-
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.1, 5)
+
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
     for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 2)
 
     cv2.imshow("Face Detection", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -1157,13 +1499,17 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
-\`\`\``
+\`\`\``,
+        quiz: [
+          { question: "What are Haar Cascades?", options: ["Neural networks", "Pre-trained classifiers for object detection", "Image filters", "Color palettes"], correctIndex: 1 },
+          { question: "What does cv2.VideoCapture(0) do?", options: ["Opens a file", "Opens the default webcam", "Takes a screenshot", "Records audio"], correctIndex: 1 },
+        ],
       },
       {
         id: "cv-04", title: "Color Detection & Object Tracking", duration: "30 min",
         content: `# Color Detection & Object Tracking
 
-## HSV Color Detection
+## HSV Color Filtering
 
 \`\`\`python
 import cv2
@@ -1175,371 +1521,233 @@ while True:
     ret, frame = cap.read()
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Define range for blue color
-    lower_blue = np.array([100, 50, 50])
+    # Track blue objects
+    lower_blue = np.array([100, 150, 50])
     upper_blue = np.array([130, 255, 255])
 
-    # Create mask
     mask = cv2.inRange(hsv, lower_blue, upper_blue)
-
-    # Apply mask
     result = cv2.bitwise_and(frame, frame, mask=mask)
 
-    cv2.imshow("Original", frame)
-    cv2.imshow("Mask", mask)
-    cv2.imshow("Result", result)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
-\`\`\`
-
-## Contour-Based Object Tracking
-
-\`\`\`python
-while True:
-    ret, frame = cap.read()
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-    mask = cv2.inRange(hsv, lower_blue, upper_blue)
-    mask = cv2.erode(mask, None, iterations=2)
-    mask = cv2.dilate(mask, None, iterations=2)
-
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL,
-                                     cv2.CHAIN_APPROX_SIMPLE)
-
-    if contours:
-        largest = max(contours, key=cv2.contourArea)
-        if cv2.contourArea(largest) > 500:
-            (x, y), radius = cv2.minEnclosingCircle(largest)
-            M = cv2.moments(largest)
-            center = (int(M["m10"]/M["m00"]), int(M["m01"]/M["m00"]))
-
-            cv2.circle(frame, center, int(radius), (0, 255, 0), 2)
-            cv2.circle(frame, center, 5, (0, 0, 255), -1)
-            cv2.putText(frame, f"({center[0]}, {center[1]})",
-                       (center[0]+10, center[1]-10),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
+    # Find contours
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area > 500:
+            x, y, w, h = cv2.boundingRect(cnt)
+            cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
 
     cv2.imshow("Tracking", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-\`\`\``
+\`\`\``,
+        quiz: [
+          { question: "Why convert to HSV for color detection?", options: ["It's faster", "HSV separates color (hue) from brightness, making detection more robust", "It uses less memory", "It's required by OpenCV"], correctIndex: 1 },
+          { question: "What does cv2.inRange() return?", options: ["A blurred image", "A binary mask of pixels within the specified range", "An edge map", "A histogram"], correctIndex: 1 },
+        ],
       },
       {
-        id: "cv-05", title: "Motion Detection & Background Subtraction", duration: "25 min",
-        content: `# Motion Detection & Background Subtraction
+        id: "cv-05", title: "Contours & Shape Detection", duration: "25 min",
+        content: `# Contours & Shape Detection
 
-## Simple Frame Differencing
+## Finding and Drawing Contours
 
 \`\`\`python
-import cv2
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+_, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-cap = cv2.VideoCapture(0)
-ret, prev_frame = cap.read()
-prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
-prev_gray = cv2.GaussianBlur(prev_gray, (21, 21), 0)
-
-while True:
-    ret, frame = cap.read()
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (21, 21), 0)
-
-    diff = cv2.absdiff(prev_gray, gray)
-    _, thresh = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)
-    thresh = cv2.dilate(thresh, None, iterations=2)
-
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL,
-                                     cv2.CHAIN_APPROX_SIMPLE)
-
-    motion_detected = False
-    for c in contours:
-        if cv2.contourArea(c) > 1000:
-            motion_detected = True
-            (x, y, w, h) = cv2.boundingRect(c)
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-
-    status = "MOTION" if motion_detected else "Still"
-    cv2.putText(frame, status, (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
-    cv2.imshow("Motion Detection", frame)
-    prev_gray = gray
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
+cv2.drawContours(img, contours, -1, (0, 255, 0), 2)
 \`\`\`
 
-## Background Subtractor (MOG2)
+## Shape Recognition
 
 \`\`\`python
-cap = cv2.VideoCapture(0)
-bg_subtractor = cv2.createBackgroundSubtractorMOG2(
-    history=500, varThreshold=50
-)
+for cnt in contours:
+    approx = cv2.approxPolyDP(cnt, 0.04 * cv2.arcLength(cnt, True), True)
+    x, y, w, h = cv2.boundingRect(approx)
 
-while True:
-    ret, frame = cap.read()
-    mask = bg_subtractor.apply(frame)
+    if len(approx) == 3:
+        shape = "Triangle"
+    elif len(approx) == 4:
+        shape = "Rectangle"
+    else:
+        shape = "Circle"
 
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL,
-                                     cv2.CHAIN_APPROX_SIMPLE)
-    for c in contours:
-        if cv2.contourArea(c) > 2000:
-            (x, y, w, h) = cv2.boundingRect(c)
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-
-    cv2.imshow("BG Subtraction", frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-\`\`\``
+    cv2.putText(img, shape, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 2)
+\`\`\``,
+        quiz: [
+          { question: "How does approxPolyDP determine a shape?", options: ["By color", "By approximating the contour to a polygon and counting vertices", "By area calculation", "By edge detection"], correctIndex: 1 },
+          { question: "A contour with 3 vertices is classified as:", options: ["Circle", "Rectangle", "Triangle", "Pentagon"], correctIndex: 2 },
+        ],
       },
       {
-        id: "cv-06", title: "Hand Gesture Recognition", duration: "30 min",
-        content: `# Hand Gesture Recognition
+        id: "cv-06", title: "Motion Detection & Background Subtraction", duration: "25 min",
+        content: `# Motion Detection
 
-## Skin Color Detection + Contour Analysis
+## Background Subtraction
 
 \`\`\`python
 import cv2
-import numpy as np
 
 cap = cv2.VideoCapture(0)
+fgbg = cv2.createBackgroundSubtractorMOG2()
 
 while True:
     ret, frame = cap.read()
-    frame = cv2.flip(frame, 1)  # Mirror
+    mask = fgbg.apply(frame)
 
-    # Region of Interest
-    roi = frame[50:350, 50:350]
-    cv2.rectangle(frame, (50, 50), (350, 350), (0, 255, 0), 2)
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Convert to HSV and detect skin color
-    hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-    lower_skin = np.array([0, 20, 70])
-    upper_skin = np.array([20, 255, 255])
-    mask = cv2.inRange(hsv, lower_skin, upper_skin)
+    for cnt in contours:
+        if cv2.contourArea(cnt) > 1000:
+            x, y, w, h = cv2.boundingRect(cnt)
+            cv2.rectangle(frame, (x,y), (x+w,y+h), (0,0,255), 2)
+            cv2.putText(frame, "Motion!", (x,y-10),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
 
-    # Clean up
-    kernel = np.ones((5, 5), np.uint8)
-    mask = cv2.dilate(mask, kernel, iterations=4)
-    mask = cv2.GaussianBlur(mask, (5, 5), 100)
-
-    # Find contours
-    contours, _ = cv2.findContours(mask, cv2.RETR_TREE,
-                                     cv2.CHAIN_APPROX_SIMPLE)
-
-    if contours:
-        largest = max(contours, key=cv2.contourArea)
-        hull = cv2.convexHull(largest, returnPoints=False)
-        defects = cv2.convexityDefects(largest, hull)
-
-        finger_count = 0
-        if defects is not None:
-            for i in range(defects.shape[0]):
-                s, e, f, d = defects[i, 0]
-                start = tuple(largest[s][0])
-                end = tuple(largest[e][0])
-                far = tuple(largest[f][0])
-                
-                # Calculate triangle sides
-                a = np.sqrt((end[0]-start[0])**2 + (end[1]-start[1])**2)
-                b = np.sqrt((far[0]-start[0])**2 + (far[1]-start[1])**2)
-                c = np.sqrt((end[0]-far[0])**2 + (end[1]-far[1])**2)
-                angle = np.arccos((b**2+c**2-a**2) / (2*b*c)) * 180/np.pi
-
-                if angle <= 90:
-                    finger_count += 1
-                    cv2.circle(roi, far, 5, (0, 0, 255), -1)
-
-        finger_count += 1  # Add thumb
-        cv2.putText(frame, f"Fingers: {finger_count}", (50, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-    cv2.imshow("Gesture", frame)
+    cv2.imshow("Motion Detection", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+\`\`\`
 
-cap.release()
-\`\`\``
+## Applications
+- Security camera systems
+- People counting
+- Traffic monitoring
+- Gesture recognition`,
+        quiz: [
+          { question: "What does a background subtractor do?", options: ["Removes the background color", "Learns the static background and highlights moving objects", "Blurs the background", "Converts to grayscale"], correctIndex: 1 },
+          { question: "Why filter contours by area (>1000)?", options: ["To detect only large objects", "To ignore noise and small artifacts", "To speed up processing", "To detect colors"], correctIndex: 1 },
+        ],
       },
     ],
   },
 
   // ═══════════════════════════════════════════════════════
-  // PYGAME 2025
+  // PYGAME GAME DEVELOPMENT 2025
   // ═══════════════════════════════════════════════════════
   {
     id: "pygame-2025",
     title: "PyGame Game Development 2025",
     path: "Programming",
     level: "Beginner",
-    description: "Learn game development with Python and PyGame — from basics to building complete games.",
+    description: "Learn game development with Python & PyGame — sprites, physics, sound, and complete game projects.",
     prerequisites: [],
     lessons: [
       {
         id: "pg-01", title: "PyGame Setup & Game Loop", duration: "20 min",
         content: `# PyGame Setup & Game Loop
 
-## Installing PyGame
+## Installation
 
 \`\`\`bash
 pip install pygame
 \`\`\`
 
-## The Basic Game Loop
+## Basic Game Window
 
 \`\`\`python
 import pygame
 import sys
 
-# Initialize
 pygame.init()
 
-# Create window
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("My First Game")
-
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-
-# Clock for frame rate
 clock = pygame.time.Clock()
-FPS = 60
 
 # Game loop
 running = True
 while running:
-    # 1. Handle events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # 2. Update game state
-    # (nothing yet)
+    screen.fill((30, 30, 30))  # Dark background
 
-    # 3. Draw
-    screen.fill(BLACK)
-    pygame.draw.rect(screen, RED, (350, 250, 100, 100))
-    pygame.draw.circle(screen, BLUE, (400, 300), 50)
-
-    # 4. Flip display
     pygame.display.flip()
-    clock.tick(FPS)
+    clock.tick(60)  # 60 FPS
 
 pygame.quit()
 sys.exit()
 \`\`\`
 
 ## Key Concepts
-- **pygame.init()** — initialize all modules
-- **Event loop** — handle input (keyboard, mouse, quit)
-- **screen.fill()** — clear the screen each frame
-- **pygame.display.flip()** — update the display
-- **clock.tick(FPS)** — cap frame rate`
+- **pygame.init()** — Initialize all modules
+- **Event loop** — Handle user input (keyboard, mouse, quit)
+- **screen.fill()** — Clear the screen each frame
+- **pygame.display.flip()** — Update the display
+- **clock.tick(60)** — Cap at 60 frames per second`,
+        quiz: [
+          { question: "What does clock.tick(60) do?", options: ["Waits 60 seconds", "Limits the game to 60 frames per second", "Creates 60 sprites", "Sets window size to 60px"], correctIndex: 1 },
+          { question: "What is the purpose of the event loop?", options: ["Drawing graphics", "Playing sound", "Handling user input and system events", "Loading images"], correctIndex: 2 },
+        ],
       },
       {
-        id: "pg-02", title: "Movement & Keyboard Input", duration: "20 min",
-        content: `# Movement & Keyboard Input
+        id: "pg-02", title: "Drawing Shapes & Moving Objects", duration: "25 min",
+        content: `# Drawing Shapes & Moving Objects
 
-## Moving a Player Rectangle
+## Drawing Primitives
 
 \`\`\`python
-import pygame
-import sys
+# Rectangle
+pygame.draw.rect(screen, (255, 0, 0), (100, 100, 50, 50))
 
-pygame.init()
-screen = pygame.display.set_mode((800, 600))
-clock = pygame.time.Clock()
+# Circle
+pygame.draw.circle(screen, (0, 255, 0), (400, 300), 30)
 
-# Player
-player_x, player_y = 375, 275
-player_w, player_h = 50, 50
-speed = 5
-
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    # Continuous key press
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-        player_x -= speed
-    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-        player_x += speed
-    if keys[pygame.K_UP] or keys[pygame.K_w]:
-        player_y -= speed
-    if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-        player_y += speed
-
-    # Keep player on screen
-    player_x = max(0, min(800 - player_w, player_x))
-    player_y = max(0, min(600 - player_h, player_y))
-
-    # Draw
-    screen.fill((20, 20, 30))
-    pygame.draw.rect(screen, (0, 200, 255),
-                     (player_x, player_y, player_w, player_h))
-
-    pygame.display.flip()
-    clock.tick(60)
-
-pygame.quit()
+# Line
+pygame.draw.line(screen, (0, 0, 255), (0, 0), (800, 600), 3)
 \`\`\`
 
-## Using pygame.Rect for Collision
+## Moving a Player
 
 \`\`\`python
-player = pygame.Rect(375, 275, 50, 50)
+player_x, player_y = 400, 300
+speed = 5
 
-# Move with Rect
-player.x += speed
+while running:
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        player_x -= speed
+    if keys[pygame.K_RIGHT]:
+        player_x += speed
+    if keys[pygame.K_UP]:
+        player_y -= speed
+    if keys[pygame.K_DOWN]:
+        player_y += speed
 
-# Clamp to screen
-player.clamp_ip(screen.get_rect())
-
-# Draw
-pygame.draw.rect(screen, (0, 200, 255), player)
-\`\`\``
+    screen.fill((30, 30, 30))
+    pygame.draw.rect(screen, (0, 200, 255), (player_x, player_y, 40, 40))
+    pygame.display.flip()
+    clock.tick(60)
+\`\`\``,
+        quiz: [
+          { question: "How do you detect if a key is currently held down?", options: ["pygame.event.get()", "pygame.key.get_pressed()", "pygame.mouse.get_pos()", "pygame.K_DOWN"], correctIndex: 1 },
+          { question: "What coordinate system does PyGame use?", options: ["(0,0) at center", "(0,0) at top-left", "(0,0) at bottom-left", "(0,0) at bottom-right"], correctIndex: 1 },
+        ],
       },
       {
         id: "pg-03", title: "Sprites & Images", duration: "25 min",
         content: `# Sprites & Images
 
-## Loading Images
+## Loading and Displaying Images
 
 \`\`\`python
-# Load image
 player_img = pygame.image.load("player.png").convert_alpha()
+player_img = pygame.transform.scale(player_img, (50, 50))
 
-# Scale image
-player_img = pygame.transform.scale(player_img, (64, 64))
-
-# Rotate image
-rotated = pygame.transform.rotate(player_img, 45)
-
-# Draw image (blit)
 screen.blit(player_img, (player_x, player_y))
 \`\`\`
 
-## Using the Sprite Class
+## Sprite Classes
 
 \`\`\`python
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.Surface((50, 50))
+        self.image = pygame.Surface((40, 40))
         self.image.fill((0, 200, 255))
         self.rect = self.image.get_rect(center=(400, 300))
         self.speed = 5
@@ -1550,213 +1758,115 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_RIGHT]: self.rect.x += self.speed
         if keys[pygame.K_UP]: self.rect.y -= self.speed
         if keys[pygame.K_DOWN]: self.rect.y += self.speed
-        self.rect.clamp_ip(screen.get_rect())
 
-class Enemy(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pygame.Surface((40, 40))
-        self.image.fill((255, 50, 50))
-        self.rect = self.image.get_rect(center=(x, y))
-
-# Create groups
 all_sprites = pygame.sprite.Group()
-enemies = pygame.sprite.Group()
-
 player = Player()
 all_sprites.add(player)
-
-for i in range(5):
-    e = Enemy(100 + i * 120, 100)
-    all_sprites.add(e)
-    enemies.add(e)
 
 # In game loop:
 all_sprites.update()
 all_sprites.draw(screen)
-
-# Check collisions
-hits = pygame.sprite.spritecollide(player, enemies, True)
-for hit in hits:
-    print("Enemy destroyed!")
-\`\`\``
+\`\`\``,
+        quiz: [
+          { question: "What does convert_alpha() do when loading images?", options: ["Converts to grayscale", "Optimizes the image format and preserves transparency", "Resizes the image", "Adds a border"], correctIndex: 1 },
+          { question: "What is a Sprite Group used for?", options: ["Drawing backgrounds", "Managing and updating multiple sprites together", "Playing sounds", "Handling input"], correctIndex: 1 },
+        ],
       },
       {
-        id: "pg-04", title: "Collision Detection & Physics", duration: "25 min",
-        content: `# Collision Detection & Physics
+        id: "pg-04", title: "Collision Detection", duration: "25 min",
+        content: `# Collision Detection
 
-## Rectangle Collision
+## Rect-Based Collision
 
 \`\`\`python
-player = pygame.Rect(100, 100, 50, 50)
-obstacle = pygame.Rect(300, 200, 100, 100)
-
-if player.colliderect(obstacle):
+if player.rect.colliderect(enemy.rect):
     print("Collision!")
 \`\`\`
 
-## Simple Gravity & Jumping
+## Sprite Group Collision
 
 \`\`\`python
-import pygame
-import sys
+hits = pygame.sprite.spritecollide(player, enemies, True)
+for hit in hits:
+    score += 10
+\`\`\`
 
-pygame.init()
-screen = pygame.display.set_mode((800, 600))
-clock = pygame.time.Clock()
+## Pixel-Perfect Collision
 
-# Player with physics
-player = pygame.Rect(100, 400, 40, 60)
-vel_y = 0
-gravity = 0.8
-jump_power = -15
-on_ground = False
+\`\`\`python
+if pygame.sprite.collide_mask(player, enemy):
+    print("Pixel-perfect collision!")
+\`\`\`
 
-# Platforms
-platforms = [
-    pygame.Rect(0, 500, 800, 100),
-    pygame.Rect(200, 400, 150, 20),
-    pygame.Rect(450, 320, 150, 20),
-]
+## Keeping Player In Bounds
 
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and on_ground:
-                vel_y = jump_power
-                on_ground = False
-
-    # Horizontal movement
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]: player.x -= 5
-    if keys[pygame.K_RIGHT]: player.x += 5
-
-    # Apply gravity
-    vel_y += gravity
-    player.y += vel_y
-
-    # Platform collision
-    on_ground = False
-    for plat in platforms:
-        if player.colliderect(plat) and vel_y > 0:
-            player.bottom = plat.top
-            vel_y = 0
-            on_ground = True
-
-    # Draw
-    screen.fill((30, 30, 50))
-    pygame.draw.rect(screen, (0, 200, 255), player)
-    for plat in platforms:
-        pygame.draw.rect(screen, (100, 100, 100), plat)
-
-    pygame.display.flip()
-    clock.tick(60)
-
-pygame.quit()
-\`\`\``
+\`\`\`python
+def update(self):
+    # ... movement code ...
+    self.rect.clamp_ip(screen.get_rect())
+\`\`\``,
+        quiz: [
+          { question: "What does spritecollide(player, enemies, True) do when True?", options: ["Detects collision only", "Detects collision and removes the colliding sprites from the group", "Ignores collision", "Creates new sprites"], correctIndex: 1 },
+          { question: "What is pixel-perfect collision?", options: ["Checking if rectangles overlap", "Checking actual pixel overlap using masks", "Checking distance between centers", "Using physics simulation"], correctIndex: 1 },
+        ],
       },
       {
-        id: "pg-05", title: "Sound, Text & UI", duration: "20 min",
-        content: `# Sound, Text & UI
+        id: "pg-05", title: "Sound, Text & Scoring", duration: "20 min",
+        content: `# Sound, Text & Scoring
 
 ## Playing Sounds
 
 \`\`\`python
 pygame.mixer.init()
+shoot_sound = pygame.mixer.Sound("shoot.wav")
+shoot_sound.play()
 
 # Background music
 pygame.mixer.music.load("bgm.mp3")
-pygame.mixer.music.set_volume(0.5)
 pygame.mixer.music.play(-1)  # Loop forever
-
-# Sound effects
-jump_sound = pygame.mixer.Sound("jump.wav")
-coin_sound = pygame.mixer.Sound("coin.wav")
-
-# Play a sound effect
-jump_sound.play()
 \`\`\`
 
-## Rendering Text
+## Displaying Text
 
 \`\`\`python
-font = pygame.font.Font(None, 48)  # Default font, size 48
-small_font = pygame.font.Font(None, 24)
+font = pygame.font.Font(None, 36)
 
-# Render text (text, antialias, color)
-score = 0
-score_text = font.render(f"Score: {score}", True, (255, 255, 255))
-screen.blit(score_text, (10, 10))
-\`\`\`
+def draw_text(text, x, y, color=(255, 255, 255)):
+    surface = font.render(text, True, color)
+    screen.blit(surface, (x, y))
 
-## Game Over Screen
-
-\`\`\`python
-def show_game_over(screen, score):
-    overlay = pygame.Surface((800, 600))
-    overlay.set_alpha(180)
-    overlay.fill((0, 0, 0))
-    screen.blit(overlay, (0, 0))
-
-    big_font = pygame.font.Font(None, 72)
-    title = big_font.render("GAME OVER", True, (255, 50, 50))
-    screen.blit(title, (800//2 - title.get_width()//2, 200))
-
-    score_text = font.render(f"Final Score: {score}", True, (255, 255, 255))
-    screen.blit(score_text, (800//2 - score_text.get_width()//2, 300))
-
-    hint = small_font.render("Press R to restart", True, (180, 180, 180))
-    screen.blit(hint, (800//2 - hint.get_width()//2, 400))
-
-    pygame.display.flip()
-\`\`\`
-
-## Health Bar
-
-\`\`\`python
-def draw_health_bar(screen, x, y, health, max_health):
-    bar_width = 200
-    bar_height = 20
-    fill = (health / max_health) * bar_width
-
-    # Background
-    pygame.draw.rect(screen, (60, 60, 60), (x, y, bar_width, bar_height))
-    # Fill
-    color = (0, 200, 0) if health > 50 else (255, 200, 0) if health > 25 else (255, 0, 0)
-    pygame.draw.rect(screen, color, (x, y, fill, bar_height))
-    # Border
-    pygame.draw.rect(screen, (255, 255, 255), (x, y, bar_width, bar_height), 2)
-\`\`\``
+# In game loop:
+draw_text(f"Score: {score}", 10, 10)
+draw_text(f"Lives: {lives}", 10, 50, (255, 100, 100))
+\`\`\``,
+        quiz: [
+          { question: "What does pygame.mixer.music.play(-1) do?", options: ["Plays once", "Loops the music forever", "Stops the music", "Plays backwards"], correctIndex: 1 },
+          { question: "What does font.render() return?", options: ["A string", "A Surface with the rendered text", "A Rect", "An integer"], correctIndex: 1 },
+        ],
       },
       {
-        id: "pg-06", title: "Building a Complete Shooter Game", duration: "40 min",
-        content: `# Building a Complete Shooter Game
+        id: "pg-06", title: "Building a Complete Game", duration: "35 min",
+        content: `# Building a Complete Game — Space Shooter
 
-## Top-Down Space Shooter
+## Game Structure
 
 \`\`\`python
 import pygame
 import random
-import sys
 
+# Initialize
 pygame.init()
-WIDTH, HEIGHT = 600, 800
+WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Space Shooter")
 clock = pygame.time.Clock()
-font = pygame.font.Font(None, 36)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.Surface((40, 50))
+        self.image = pygame.Surface((50, 40))
         self.image.fill((0, 200, 255))
         self.rect = self.image.get_rect(midbottom=(WIDTH//2, HEIGHT-20))
         self.speed = 6
-        self.health = 100
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -1764,255 +1874,86 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_RIGHT]: self.rect.x += self.speed
         self.rect.clamp_ip(screen.get_rect())
 
-    def shoot(self):
-        return Bullet(self.rect.centerx, self.rect.top)
-
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.Surface((4, 12))
+        self.image = pygame.Surface((4, 10))
         self.image.fill((255, 255, 0))
         self.rect = self.image.get_rect(center=(x, y))
 
     def update(self):
-        self.rect.y -= 10
+        self.rect.y -= 8
         if self.rect.bottom < 0:
             self.kill()
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.Surface((35, 35))
+        self.image = pygame.Surface((40, 30))
         self.image.fill((255, 50, 50))
         self.rect = self.image.get_rect(
-            center=(random.randint(30, WIDTH-30), -30)
+            center=(random.randint(20, WIDTH-20), -20)
         )
-        self.speed = random.uniform(2, 5)
+        self.speed = random.randint(2, 5)
 
     def update(self):
         self.rect.y += self.speed
         if self.rect.top > HEIGHT:
             self.kill()
 
-# Groups
-all_sprites = pygame.sprite.Group()
+# Game loop with scoring, shooting, and collision
+score = 0
+player = Player()
+all_sprites = pygame.sprite.Group(player)
 bullets = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
 
-player = Player()
-all_sprites.add(player)
-
-# Spawn timer
-SPAWN_EVENT = pygame.USEREVENT + 1
-pygame.time.set_timer(SPAWN_EVENT, 800)
-
-score = 0
 running = True
-
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                b = player.shoot()
+                b = Bullet(player.rect.centerx, player.rect.top)
                 all_sprites.add(b)
                 bullets.add(b)
-        if event.type == SPAWN_EVENT:
-            e = Enemy()
-            all_sprites.add(e)
-            enemies.add(e)
+
+    # Spawn enemies
+    if random.random() < 0.02:
+        e = Enemy()
+        all_sprites.add(e)
+        enemies.add(e)
 
     all_sprites.update()
 
-    # Bullet-enemy collisions
+    # Check collisions
     hits = pygame.sprite.groupcollide(bullets, enemies, True, True)
     score += len(hits) * 10
 
-    # Enemy-player collisions
-    if pygame.sprite.spritecollide(player, enemies, True):
-        player.health -= 20
-        if player.health <= 0:
-            running = False
-
-    # Draw
     screen.fill((10, 10, 30))
     all_sprites.draw(screen)
-
-    # UI
-    score_text = font.render(f"Score: {score}", True, (255, 255, 255))
-    screen.blit(score_text, (10, 10))
-
-    # Health bar
-    bar_w = 150
-    fill = (player.health / 100) * bar_w
-    pygame.draw.rect(screen, (60, 60, 60), (WIDTH-bar_w-10, 10, bar_w, 15))
-    color = (0,200,0) if player.health > 50 else (255,0,0)
-    pygame.draw.rect(screen, color, (WIDTH-bar_w-10, 10, fill, 15))
-
     pygame.display.flip()
     clock.tick(60)
-
-pygame.quit()
-\`\`\`
-
-## Challenges
-1. Add power-ups (shield, rapid fire)
-2. Add different enemy types
-3. Add boss fights every 500 points
-4. Add explosion animations
-5. Save high scores to a file`
-      },
-      {
-        id: "pg-07", title: "Building a Platformer Game", duration: "40 min",
-        content: `# Building a Platformer Game
-
-## Complete Platformer with Levels
-
-\`\`\`python
-import pygame
-import sys
-
-pygame.init()
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-clock = pygame.time.Clock()
-font = pygame.font.Font(None, 36)
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pygame.Surface((32, 48))
-        self.image.fill((0, 200, 255))
-        self.rect = self.image.get_rect(topleft=(x, y))
-        self.vel_x = 0
-        self.vel_y = 0
-        self.speed = 5
-        self.gravity = 0.8
-        self.jump_power = -14
-        self.on_ground = False
-        self.coins = 0
-        self.lives = 3
-
-    def update(self, platforms):
-        keys = pygame.key.get_pressed()
-        self.vel_x = 0
-        if keys[pygame.K_LEFT]: self.vel_x = -self.speed
-        if keys[pygame.K_RIGHT]: self.vel_x = self.speed
-
-        # Gravity
-        self.vel_y += self.gravity
-        if self.vel_y > 15: self.vel_y = 15
-
-        # Horizontal
-        self.rect.x += self.vel_x
-        for plat in platforms:
-            if self.rect.colliderect(plat.rect):
-                if self.vel_x > 0: self.rect.right = plat.rect.left
-                if self.vel_x < 0: self.rect.left = plat.rect.right
-
-        # Vertical
-        self.rect.y += self.vel_y
-        self.on_ground = False
-        for plat in platforms:
-            if self.rect.colliderect(plat.rect):
-                if self.vel_y > 0:
-                    self.rect.bottom = plat.rect.top
-                    self.vel_y = 0
-                    self.on_ground = True
-                elif self.vel_y < 0:
-                    self.rect.top = plat.rect.bottom
-                    self.vel_y = 0
-
-    def jump(self):
-        if self.on_ground:
-            self.vel_y = self.jump_power
-            self.on_ground = False
-
-class Platform(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, color=(100, 100, 100)):
-        super().__init__()
-        self.image = pygame.Surface((w, h))
-        self.image.fill(color)
-        self.rect = self.image.get_rect(topleft=(x, y))
-
-class Coin(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pygame.Surface((16, 16))
-        self.image.fill((255, 215, 0))
-        self.rect = self.image.get_rect(center=(x, y))
-
-# Level
-platforms = pygame.sprite.Group()
-coins = pygame.sprite.Group()
-all_sprites = pygame.sprite.Group()
-
-level_data = [
-    Platform(0, HEIGHT-40, WIDTH, 40, (80, 120, 80)),  # Ground
-    Platform(150, 450, 120, 20),
-    Platform(350, 370, 120, 20),
-    Platform(550, 280, 120, 20),
-    Platform(300, 190, 150, 20),
-]
-
-coin_positions = [(210, 430), (410, 350), (610, 260), (375, 170)]
-
-for p in level_data:
-    platforms.add(p)
-    all_sprites.add(p)
-
-for cx, cy in coin_positions:
-    c = Coin(cx, cy)
-    coins.add(c)
-    all_sprites.add(c)
-
-player = Player(50, HEIGHT - 100)
-
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.jump()
-
-    player.update(platforms)
-
-    # Collect coins
-    collected = pygame.sprite.spritecollide(player, coins, True)
-    player.coins += len(collected)
-
-    # Draw
-    screen.fill((25, 25, 50))
-    all_sprites.draw(screen)
-    screen.blit(player.image, player.rect)
-
-    # HUD
-    coin_text = font.render(f"Coins: {player.coins}", True, (255, 215, 0))
-    screen.blit(coin_text, (10, 10))
-
-    pygame.display.flip()
-    clock.tick(60)
-
-pygame.quit()
-\`\`\`
-
-## Next Steps
-1. Add multiple levels with a level loader
-2. Add enemies that patrol platforms
-3. Add a win condition and level transitions
-4. Add animated sprites using sprite sheets
-5. Add parallax scrolling backgrounds`
+\`\`\``,
+        quiz: [
+          { question: "What does self.kill() do in a Sprite?", options: ["Exits the game", "Removes the sprite from all groups", "Destroys the window", "Stops the game loop"], correctIndex: 1 },
+          { question: "How are enemies spawned randomly each frame?", options: ["Using a timer", "Using random.random() < probability threshold", "Using keyboard input", "Using a fixed counter"], correctIndex: 1 },
+        ],
       },
     ],
   },
 ];
 
-export const skillPaths = [
-  { id: "iot", name: "IoT Path", color: "hsl(var(--primary))", courses: ["iot-101", "iot-201"] },
-  { id: "robotics", name: "Robotics Path", color: "hsl(var(--accent))", courses: ["robot-101", "robot-201", "arduino-robotics", "rpi-robotics"] },
-  { id: "ai", name: "AI & Vision Path", color: "hsl(var(--violet))", courses: ["ai-101", "opencv-2025"] },
-  { id: "programming", name: "Programming Path", color: "hsl(var(--amber))", courses: ["pygame-2025"] },
+export interface SkillPath {
+  id: string;
+  name: string;
+  color: string;
+  courses: string[];
+}
+
+export const skillPaths: SkillPath[] = [
+  { id: "robotics", name: "Robotics Path", color: "hsl(180, 70%, 50%)", courses: ["rpi-robotics-2025", "arduino-robotics"] },
+  { id: "vision", name: "AI & Vision Path", color: "hsl(265, 83%, 57%)", courses: ["opencv-2025"] },
+  { id: "programming", name: "Programming Path", color: "hsl(45, 90%, 55%)", courses: ["pygame-2025"] },
 ];
