@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { BrainCircuit, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import AuthForm from "@/components/auth/AuthForm";
 import AuthProviders from "@/components/auth/AuthProviders";
 import PasswordStrengthBar from "@/components/auth/PasswordStrengthBar";
 import EngineeringAnimation from "@/components/auth/EngineeringAnimation";
+import logoImg from "@/assets/logo.jpeg";
 
 const Auth = () => {
   const [fullName, setFullName] = useState("");
@@ -87,7 +88,7 @@ const Auth = () => {
         });
 
         if (signUpData?.session) {
-          toast({ title: "Welcome to EngiNexus!", description: "Your account is ready." });
+          toast({ title: "Welcome!", description: "Your account is ready." });
           navigate(from);
           return;
         }
@@ -125,18 +126,12 @@ const Auth = () => {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="rounded-2xl p-3 auth-glass-green">
-              <BrainCircuit className="h-7 w-7 text-emerald-400" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">EngiNexus</h1>
-              <p className="text-[11px] text-white/40">Engineering Intelligence Platform</p>
-            </div>
+            <img src={logoImg} alt="Logo" className="h-12 w-12 rounded-2xl object-cover" />
+            <p className="text-[11px] text-white/40">Engineering Intelligence Platform</p>
           </div>
 
           {!selectedProvider ? (
-            /* Provider Selection Screen */
-            <div className={`auth-glass-dark rounded-2xl p-6 transition-transform ${shake ? "animate-shake" : ""}`}>
+            <div className={`auth-glass-dark rounded-3xl p-6 transition-transform ${shake ? "animate-shake" : ""}`}>
               <div className="mb-5">
                 <h2 className="text-lg font-semibold text-white tracking-tight">Sign in</h2>
                 <p className="text-sm text-white/40 mt-1">Choose your authentication method</p>
@@ -144,8 +139,7 @@ const Auth = () => {
               <AuthProviders onSelect={handleProviderSelect} />
             </div>
           ) : (
-            /* Login Form Screen */
-            <div className={`auth-glass-dark rounded-2xl p-8 transition-all ${shake ? "animate-shake" : ""}`}>
+            <div className={`auth-glass-dark rounded-3xl p-8 transition-all ${shake ? "animate-shake" : ""}`}>
               <button
                 onClick={() => setSelectedProvider(null)}
                 className="text-xs text-emerald-400/70 hover:text-emerald-400 transition-colors mb-4 flex items-center gap-1"
@@ -178,14 +172,11 @@ const Auth = () => {
               <Button
                 type="submit"
                 form="auth-form"
-                className="w-full rounded-xl h-12 font-semibold text-sm mt-4 bg-emerald-500/80 hover:bg-emerald-500 text-white border border-emerald-400/30 backdrop-blur-sm transition-all"
+                className="w-full rounded-2xl h-12 font-semibold text-sm mt-4 bg-emerald-500/80 hover:bg-emerald-500 text-white border border-emerald-400/30 backdrop-blur-sm transition-all"
                 disabled={loading}
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Authenticating...
-                  </span>
+                  <span className="flex items-center gap-2">Authenticating...</span>
                 ) : (
                   <span className="flex items-center gap-2">
                     <Zap className="h-4 w-4" />

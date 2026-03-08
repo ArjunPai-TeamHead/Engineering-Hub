@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { GraduationCap, BookOpen, Trophy, Zap, ChevronRight } from "lucide-react";
+import { GraduationCap, BookOpen, Trophy, Zap, ChevronRight, Award } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { courses, skillPaths } from "@/data/courses";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,7 @@ const levelColor: Record<string, string> = {
 const Academy = () => {
   const { user } = useAuth();
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
+  const [certCount, setCertCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -42,13 +44,20 @@ const Academy = () => {
         }
         setProgressMap(result);
       });
+    supabase
+      .from("certificates")
+      .select("id")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (data) setCertCount(data.length);
+      });
   }, [user]);
 
   return (
     <div className="mx-auto max-w-6xl p-6">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="rounded-lg bg-violet/10 p-2" style={{ boxShadow: "0 0 20px hsl(265 83% 57% / 0.3)" }}>
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="rounded-2xl bg-violet/10 p-2" style={{ boxShadow: "0 0 20px hsl(265 83% 57% / 0.3)" }}>
             <GraduationCap className="h-6 w-6 text-violet" />
           </div>
           <div>
@@ -56,6 +65,14 @@ const Academy = () => {
             <p className="text-muted-foreground">Interactive courses for Robotics, Computer Vision & Game Dev</p>
           </div>
         </div>
+        {user && certCount > 0 && (
+          <Button variant="outline" asChild className="rounded-full gap-2">
+            <Link to="/certificates">
+              <Award className="h-4 w-4 text-amber" />
+              {certCount} Certificate{certCount !== 1 ? "s" : ""}
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Skill Paths */}
@@ -110,16 +127,17 @@ const Academy = () => {
                       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                     </div>
                     <div className="mt-3 flex items-center gap-2">
-                      <Badge variant="outline" className={levelColor[course.level]}>{course.level}</Badge>
-                      <Badge variant="outline">{course.path}</Badge>
+                      <Badge variant="outline" className={`${levelColor[course.level]} rounded-full`}>{course.level}</Badge>
+                      <Badge variant="outline" className="rounded-full">{course.path}</Badge>
                       <span className="text-xs text-muted-foreground">{course.lessons.length} lessons</span>
                     </div>
                     {user && pct > 0 && (
                       <div className="mt-3">
                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
                           <span>{pct}% complete</span>
+                          {pct === 100 && <span className="text-amber">🏆 Complete</span>}
                         </div>
-                        <Progress value={pct} className="h-1.5" />
+                        <Progress value={pct} className="h-1.5 rounded-full" />
                       </div>
                     )}
                   </CardHeader>

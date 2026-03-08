@@ -6,6 +6,7 @@ import {
   Cpu, MessageSquare, GraduationCap, BrainCircuit,
   ShoppingCart, Wrench, Wifi, Zap, ArrowRight,
 } from "lucide-react";
+import logoImg from "@/assets/logo.jpeg";
 
 const zones = [
   { icon: Cpu, title: "The Lab", description: "Browser-based circuit simulation with drag-and-drop components and real-time code editing.", color: "hsl(160, 84%, 39%)", path: "/lab" },
@@ -30,8 +31,8 @@ const Index = () => {
           transition={{ duration: 0.7 }}
           className="mx-auto max-w-3xl"
         >
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-foreground/80">
-            <Zap className="h-4 w-4 text-primary" />
+          <div className="mb-6 inline-flex items-center gap-3 rounded-full glass px-4 py-2 text-sm font-medium text-foreground/80">
+            <img src={logoImg} alt="Logo" className="h-6 w-6 rounded-full object-cover" />
             The Engineering Platform
           </div>
           <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight text-foreground sm:text-7xl">

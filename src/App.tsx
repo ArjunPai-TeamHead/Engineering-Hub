@@ -16,6 +16,7 @@ import Hive from "./pages/Hive";
 import Academy from "./pages/Academy";
 import CoursePage from "./pages/academy/CoursePage";
 import LessonPage from "./pages/academy/LessonPage";
+import Certificates from "./pages/Certificates";
 import Core from "./pages/Core";
 import Depot from "./pages/Depot";
 import Workshop from "./pages/Workshop";
@@ -63,6 +64,7 @@ const App = () => (
                 <Route path="/academy" element={<Academy />} />
                 <Route path="/academy/course/:id" element={<CoursePage />} />
                 <Route path="/academy/lesson/:id" element={<LessonPage />} />
+                <Route path="/certificates" element={<Certificates />} />
                 <Route path="/core" element={<Core />} />
                 <Route path="/depot" element={<Depot />} />
                 <Route path="/workshop" element={<Workshop />} />
