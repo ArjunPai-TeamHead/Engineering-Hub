@@ -64,7 +64,7 @@ const AuthForm = ({
 
       {/* Email */}
       <div className="relative group">
-        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
         <Input
           type="email"
           placeholder="Email address"
