@@ -16,6 +16,7 @@ import Hive from "./pages/Hive";
 import Academy from "./pages/Academy";
 import CoursePage from "./pages/academy/CoursePage";
 import LessonPage from "./pages/academy/LessonPage";
+import Certificates from "./pages/Certificates";
 import Core from "./pages/Core";
 import Depot from "./pages/Depot";
 import Workshop from "./pages/Workshop";
