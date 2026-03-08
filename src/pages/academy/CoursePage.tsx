@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, BookOpen, Clock, ChevronRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, BookOpen, Clock, ChevronRight, CheckCircle2, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,12 +8,14 @@ import { Progress } from "@/components/ui/progress";
 import { courses } from "@/data/courses";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const CoursePage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const course = courses.find((c) => c.id === id);
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+  const [hasCertificate, setHasCertificate] = useState(false);
 
   useEffect(() => {
     if (!user || !course) return;
@@ -28,7 +30,29 @@ const CoursePage = () => {
           setCompletedLessons(new Set(data.map((d) => d.lesson_id)));
         }
       });
+    supabase
+      .from("certificates")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("course_id", course.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setHasCertificate(true);
+      });
   }, [user, course?.id]);
+
+  const claimCertificate = async () => {
+    if (!user || !course) return;
+    const { error } = await supabase.from("certificates").insert({
+      user_id: user.id,
+      course_id: course.id,
+      course_title: course.title,
+    });
+    if (!error) {
+      setHasCertificate(true);
+      toast.success("Certificate earned! 🏆");
+    }
+  };
 
   if (!course) {
     return (
@@ -40,6 +64,7 @@ const CoursePage = () => {
   }
 
   const progress = course.lessons.length > 0 ? Math.round((completedLessons.size / course.lessons.length) * 100) : 0;
+  const allComplete = progress === 100;
 
   return (
     <div className="mx-auto max-w-3xl p-6">
@@ -51,8 +76,8 @@ const CoursePage = () => {
         <h1 className="text-2xl font-bold text-foreground">{course.title}</h1>
         <p className="mt-1 text-muted-foreground">{course.description}</p>
         <div className="mt-3 flex items-center gap-2">
-          <Badge variant="outline">{course.level}</Badge>
-          <Badge variant="outline">{course.path} Path</Badge>
+          <Badge variant="outline" className="rounded-full">{course.level}</Badge>
+          <Badge variant="outline" className="rounded-full">{course.path} Path</Badge>
         </div>
       </div>
 
@@ -62,8 +87,34 @@ const CoursePage = () => {
             <span className="text-xs font-medium text-muted-foreground">Progress</span>
             <span className="text-xs font-medium text-muted-foreground">{completedLessons.size}/{course.lessons.length} lessons</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-2 rounded-full" />
         </div>
+      )}
+
+      {/* Certificate section */}
+      {user && allComplete && (
+        <Card className="mb-6 border-amber/30 bg-amber/5">
+          <CardContent className="flex items-center gap-4 py-4">
+            <Award className="h-8 w-8 text-amber shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-foreground">
+                {hasCertificate ? "Certificate Earned! 🏆" : "All lessons complete! Claim your certificate."}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {hasCertificate ? "View it in your certificates page." : "You've completed every lesson in this course."}
+              </p>
+            </div>
+            {hasCertificate ? (
+              <Button variant="outline" size="sm" asChild className="rounded-full">
+                <Link to="/certificates">View</Link>
+              </Button>
+            ) : (
+              <Button size="sm" onClick={claimCertificate} className="rounded-full bg-amber text-foreground hover:bg-amber/80">
+                Claim Badge
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-foreground">
