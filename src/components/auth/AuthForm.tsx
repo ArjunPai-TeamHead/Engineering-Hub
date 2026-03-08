@@ -71,7 +71,7 @@ const AuthForm = ({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="pl-10 h-12 rounded-xl border-border/60 bg-background/50 focus:bg-background transition-all text-sm"
+          className="pl-10 h-12 rounded-xl border-white/10 bg-white/5 focus:bg-white/[0.08] focus:border-emerald-500/30 text-white placeholder:text-white/30 transition-all text-sm"
         />
       </div>
 
