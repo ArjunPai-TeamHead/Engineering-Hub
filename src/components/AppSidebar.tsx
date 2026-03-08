@@ -12,6 +12,7 @@ import {
   SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import logoImg from "@/assets/logo.jpeg";
 
 const zones = [
   { title: "Home", url: "/", icon: Home },
@@ -38,14 +39,18 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="font-bold tracking-wider">
-            {!collapsed && "ENGINEXUS"}
+            {!collapsed ? (
+              <img src={logoImg} alt="Logo" className="h-8 w-8 rounded-full object-cover" />
+            ) : (
+              <img src={logoImg} alt="Logo" className="h-6 w-6 rounded-full object-cover" />
+            )}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {zones.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent" activeClassName="bg-sidebar-accent text-primary font-medium">
+                    <NavLink to={item.url} end={item.url === "/"} className="hover:bg-sidebar-accent rounded-2xl" activeClassName="bg-sidebar-accent text-primary font-medium">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </NavLink>
@@ -58,7 +63,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="gap-1 pb-3">
         {user && profile && (
-          <div className={`px-2 py-1.5 rounded-lg border border-border bg-muted/40 ${collapsed ? "flex justify-center" : ""}`}>
+          <div className={`px-2 py-1.5 rounded-2xl glass ${collapsed ? "flex justify-center" : ""}`}>
             {collapsed ? (
               <User className="h-4 w-4 text-muted-foreground" />
             ) : (
@@ -76,25 +81,25 @@ export function AppSidebar() {
         )}
 
         <div className="flex gap-1 justify-center">
-          <Button variant="ghost" size="icon" onClick={toggle}>
+          <Button variant="ghost" size="icon" onClick={toggle} className="rounded-2xl">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
           {user && (
-            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} title="Settings">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} title="Settings" className="rounded-2xl">
               <Settings className="h-4 w-4" />
             </Button>
           )}
           {user && isAdmin && (
-            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} title="Admin Dashboard">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} title="Admin Dashboard" className="rounded-2xl">
               <Shield className="h-4 w-4" />
             </Button>
           )}
           {user ? (
-            <Button variant="ghost" size="icon" onClick={signOut} title="Sign out">
+            <Button variant="ghost" size="icon" onClick={signOut} title="Sign out" className="rounded-2xl">
               <LogOut className="h-4 w-4" />
             </Button>
           ) : (
-            <Button variant="ghost" size="icon" onClick={() => navigate("/auth")} title="Sign in">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/auth")} title="Sign in" className="rounded-2xl">
               <LogIn className="h-4 w-4" />
             </Button>
           )}

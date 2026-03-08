@@ -3,15 +3,6 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
 @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
 
 @layer base {
@@ -35,7 +26,7 @@
     --border: 212 26% 83%;
     --input: 212 26% 83%;
     --ring: 200 98% 39%;
-    --radius: 0.5rem;
+    --radius: 1.25rem;
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 200 98% 39%;
@@ -69,6 +60,9 @@
     --tracking-normal: 0em;
     --spacing: 0.25rem;
     --font-serif: 'Lora', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+
+    --glass-bg: 0 0% 100% / 0.6;
+    --glass-border: 0 0% 80% / 0.48;
   }
 
   .dark {
@@ -105,7 +99,7 @@
     --chart-4: 215 16% 46%;
     --chart-5: 215 19% 34%;
     --sidebar: 217 32% 17%;
-    --radius: 0rem;
+    --radius: 1.25rem;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
@@ -114,6 +108,9 @@
     --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
     --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+
+    --glass-bg: 0 0% 80% / 0.12;
+    --glass-border: 0 0% 80% / 0.2;
   }
 }
 
@@ -135,16 +132,18 @@
 
 @layer utilities {
   .glass {
-    background: hsl(var(--card) / 0.7);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid hsl(var(--border) / 0.5);
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 4px 30px hsl(0 0% 0% / 0.1);
   }
   .glass-strong {
     background: hsl(var(--card) / 0.85);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
-    border: 1px solid hsl(var(--border) / 0.4);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 4px 30px hsl(0 0% 0% / 0.1);
   }
   .glow-primary {
     box-shadow: 0 0 20px hsl(var(--primary) / 0.15), 0 0 60px hsl(var(--primary) / 0.05);
@@ -163,7 +162,11 @@
     background-size: 40px 40px;
   }
   .ios-card {
-    @apply rounded-2xl border border-border/50 bg-card shadow-sm;
+    @apply rounded-3xl border bg-card/60 shadow-sm;
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-color: hsl(var(--glass-border));
+    box-shadow: 0 4px 30px hsl(0 0% 0% / 0.1);
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
   .ios-card:hover {
@@ -201,7 +204,7 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: hsl(var(--muted) / 0.3);
     border-radius: 4px;
   }
 }

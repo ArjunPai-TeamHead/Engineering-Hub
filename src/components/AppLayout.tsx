@@ -2,7 +2,6 @@ import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
 
 const PUBLIC_ROUTES = ["/"];
 
@@ -14,7 +13,7 @@ export function AppLayout() {
   if (loading && !isPublic) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary" />
       </div>
     );
   }
@@ -28,7 +27,7 @@ export function AppLayout() {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <main className="flex-1">
-          <header className="flex h-12 items-center border-b border-border px-4">
+          <header className="flex h-12 items-center border-b border-border/50 px-4 glass">
             <SidebarTrigger />
           </header>
           <Outlet />
