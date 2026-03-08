@@ -42,7 +42,7 @@ const AuthForm = ({
 
       {/* Username */}
       <div className="relative group">
-        <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
         <Input
           placeholder="Username"
           value={username}
