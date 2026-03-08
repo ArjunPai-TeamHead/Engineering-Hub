@@ -31,23 +31,23 @@ const AuthForm = ({
     <form id="auth-form" onSubmit={onSubmit} className="space-y-3">
       {/* Full Name */}
       <div className="relative group">
-        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
         <Input
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className="pl-10 h-12 rounded-xl border-border/60 bg-background/50 focus:bg-background transition-all text-sm"
+          className="pl-10 h-12 rounded-xl border-white/10 bg-white/5 focus:bg-white/[0.08] focus:border-emerald-500/30 text-white placeholder:text-white/30 transition-all text-sm"
         />
       </div>
 
       {/* Username */}
       <div className="relative group">
-        <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
         <Input
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-          className="pl-10 pr-10 h-12 rounded-xl border-border/60 bg-background/50 focus:bg-background transition-all text-sm"
+          className="pl-10 pr-10 h-12 rounded-xl border-white/10 bg-white/5 focus:bg-white/[0.08] focus:border-emerald-500/30 text-white placeholder:text-white/30 transition-all text-sm"
         />
         {username.length >= 3 && (
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
@@ -64,20 +64,20 @@ const AuthForm = ({
 
       {/* Email */}
       <div className="relative group">
-        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
         <Input
           type="email"
           placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="pl-10 h-12 rounded-xl border-border/60 bg-background/50 focus:bg-background transition-all text-sm"
+          className="pl-10 h-12 rounded-xl border-white/10 bg-white/5 focus:bg-white/[0.08] focus:border-emerald-500/30 text-white placeholder:text-white/30 transition-all text-sm"
         />
       </div>
 
       {/* Password */}
       <div className="relative group">
-        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
         <Input
           type={showPassword ? "text" : "password"}
           placeholder="Password"
@@ -85,12 +85,12 @@ const AuthForm = ({
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className={`pl-10 pr-10 h-12 rounded-xl border-border/60 bg-background/50 focus:bg-background transition-all text-sm ${fieldError ? "border-destructive ring-1 ring-destructive/30" : ""}`}
+          className={`pl-10 pr-10 h-12 rounded-xl border-white/10 bg-white/5 focus:bg-white/[0.08] focus:border-emerald-500/30 text-white placeholder:text-white/30 transition-all text-sm ${fieldError ? "border-red-500/50 ring-1 ring-red-500/20" : ""}`}
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
         >
           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
