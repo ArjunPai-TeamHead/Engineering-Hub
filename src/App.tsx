@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
+import { AdminRoute } from "@/components/AdminRoute";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -92,7 +93,7 @@ const App = () => (
                   <Route path="/workshop/fastener" element={<FastenerCalc />} />
                   <Route path="/workshop/connectors" element={<ConnectorMatcher />} />
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                   <Route path="/hub" element={<Hub />} />
                   <Route path="/cloud" element={<CloudDatabase />} />
                 </Route>

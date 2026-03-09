@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Settings as SettingsIcon, User, Palette, Shield, Save, Loader2, Camera } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,19 @@ const Settings = () => {
   const [skillLevel, setSkillLevel] = useState(profile?.skill_level || "beginner");
   const [githubUsername, setGithubUsername] = useState(profile?.github_username || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string>("");
+
+  // Resolve signed URL for avatar display
+  useEffect(() => {
+    const resolveAvatar = async () => {
+      if (!avatarUrl) { setResolvedAvatarUrl(""); return; }
+      // If it's already a full URL (legacy), use as-is
+      if (avatarUrl.startsWith("http")) { setResolvedAvatarUrl(avatarUrl); return; }
+      const { data } = await supabase.storage.from("user-files").createSignedUrl(avatarUrl, 3600);
+      if (data?.signedUrl) setResolvedAvatarUrl(data.signedUrl);
+    };
+    resolveAvatar();
+  }, [avatarUrl]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,9 +47,9 @@ const Settings = () => {
     const filePath = `${user.id}/avatar.${ext}`;
     const { error } = await supabase.storage.from("user-files").upload(filePath, file, { upsert: true });
     if (error) { toast({ title: "Upload failed", description: error.message, variant: "destructive" }); setUploading(false); return; }
-    const { data: urlData } = supabase.storage.from("user-files").getPublicUrl(filePath);
-    setAvatarUrl(urlData.publicUrl);
-    await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", user.id);
+    // Store path, not public URL — bucket is private
+    setAvatarUrl(filePath);
+    await supabase.from("profiles").update({ avatar_url: filePath }).eq("user_id", user.id);
     await refreshProfile();
     toast({ title: "Avatar updated!" });
     setUploading(false);
@@ -88,7 +101,7 @@ const Settings = () => {
               <div className="flex items-center gap-4">
                 <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                   <Avatar className="h-20 w-20">
-                    {avatarUrl && <AvatarImage src={avatarUrl} />}
+                    {resolvedAvatarUrl && <AvatarImage src={resolvedAvatarUrl} />}
                     <AvatarFallback className="text-lg font-bold bg-primary/10 text-primary">
                       {displayName?.slice(0, 2).toUpperCase() || "EN"}
                     </AvatarFallback>

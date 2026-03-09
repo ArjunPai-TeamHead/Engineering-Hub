@@ -37,10 +37,6 @@ const AdminDashboard = () => {
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    if (!loading && role !== "admin") {
-      navigate("/");
-      return;
-    }
     if (role === "admin") fetchAll();
   }, [role, loading]);
 
