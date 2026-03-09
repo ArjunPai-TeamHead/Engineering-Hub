@@ -76,6 +76,14 @@ const Auth = () => {
       }
 
       if (signInError.message.toLowerCase().includes("invalid")) {
+        // Check if user exists first via a simple query
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", email)
+          .maybeSingle();
+
+        // Only attempt signup if sign-in failed with invalid credentials
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -88,7 +96,11 @@ const Auth = () => {
         });
 
         if (signUpError) {
-          setFieldError(signUpError.message);
+          if (signUpError.message.toLowerCase().includes("rate limit")) {
+            setFieldError("Too many attempts. Please wait a minute and try again.");
+          } else {
+            setFieldError(signUpError.message);
+          }
           triggerShake();
           return;
         }
@@ -100,7 +112,6 @@ const Auth = () => {
         }
 
         if (signUpData?.user && !signUpData.session) {
-          // Auto-confirm is on, so try signing in again
           const { error: retryError } = await supabase.auth.signInWithPassword({ email, password });
           if (!retryError) {
             toast({ title: "Welcome!", description: "Your account is ready." });
@@ -113,7 +124,11 @@ const Auth = () => {
         }
       }
 
-      setFieldError(signInError.message || "Something went wrong. Please try again.");
+      if (signInError.message.toLowerCase().includes("rate limit")) {
+        setFieldError("Too many attempts. Please wait a minute and try again.");
+      } else {
+        setFieldError(signInError.message || "Something went wrong. Please try again.");
+      }
       triggerShake();
     } catch {
       // Silent
