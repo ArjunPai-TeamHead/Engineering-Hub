@@ -149,7 +149,7 @@ const Auth = () => {
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-emerald-500/5 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-emerald-500/3 blur-[120px] pointer-events-none" />
 
-      {/* Left Panel - Auth */}
+      {/* Left Panel - Auth (always visible) */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 relative z-10">
         <div className="w-full max-w-md">
           {/* Logo */}
@@ -217,7 +217,7 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Right Panel - Engineering Animation */}
+      {/* Right Panel - Engineering Animation (always visible on lg+) */}
       <div className="hidden lg:flex w-1/2 items-center justify-center relative">
         <EngineeringAnimation />
       </div>
