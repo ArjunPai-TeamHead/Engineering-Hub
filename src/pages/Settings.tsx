@@ -25,6 +25,19 @@ const Settings = () => {
   const [skillLevel, setSkillLevel] = useState(profile?.skill_level || "beginner");
   const [githubUsername, setGithubUsername] = useState(profile?.github_username || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string>("");
+
+  // Resolve signed URL for avatar display
+  useEffect(() => {
+    const resolveAvatar = async () => {
+      if (!avatarUrl) { setResolvedAvatarUrl(""); return; }
+      // If it's already a full URL (legacy), use as-is
+      if (avatarUrl.startsWith("http")) { setResolvedAvatarUrl(avatarUrl); return; }
+      const { data } = await supabase.storage.from("user-files").createSignedUrl(avatarUrl, 3600);
+      if (data?.signedUrl) setResolvedAvatarUrl(data.signedUrl);
+    };
+    resolveAvatar();
+  }, [avatarUrl]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
