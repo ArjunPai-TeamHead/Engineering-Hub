@@ -84,7 +84,7 @@ const CloudDatabase = () => {
     const filePath = `${user.id}/${Date.now()}-${file.name}`;
     const { error: uploadError } = await supabase.storage.from("user-files").upload(filePath, file);
     if (uploadError) { toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" }); return; }
-    const { data: urlData } = supabase.storage.from("user-files").getPublicUrl(filePath);
+    // Store path, not public URL — bucket is private, use signed URLs at render
     
     const fileType = file.type.startsWith("image/") ? "image" : file.name.match(/\.(js|ts|tsx|py|cpp|c|h|ino|json|html|css)$/) ? "code" : "file";
     
