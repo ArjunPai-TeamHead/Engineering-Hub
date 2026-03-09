@@ -44,14 +44,21 @@ const Core = () => {
     let assistantContent = "";
 
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        setMessages(prev => [...prev, { role: "assistant", content: "Please sign in to use The Core." }]);
+        setLoading(false);
+        return;
+      }
+
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       const resp = await fetch(`${SUPABASE_URL}/functions/v1/core-ai`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ messages: newMessages }),
       });
