@@ -101,7 +101,7 @@ const Settings = () => {
               <div className="flex items-center gap-4">
                 <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                   <Avatar className="h-20 w-20">
-                    {avatarUrl && <AvatarImage src={avatarUrl} />}
+                    {resolvedAvatarUrl && <AvatarImage src={resolvedAvatarUrl} />}
                     <AvatarFallback className="text-lg font-bold bg-primary/10 text-primary">
                       {displayName?.slice(0, 2).toUpperCase() || "EN"}
                     </AvatarFallback>
