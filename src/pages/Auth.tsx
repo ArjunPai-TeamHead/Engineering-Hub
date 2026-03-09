@@ -76,7 +76,7 @@ const Auth = () => {
       }
 
       if (signInError.message.toLowerCase().includes("invalid")) {
-        const { data: signUpData } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -87,6 +87,12 @@ const Auth = () => {
           },
         });
 
+        if (signUpError) {
+          setFieldError(signUpError.message);
+          triggerShake();
+          return;
+        }
+
         if (signUpData?.session) {
           toast({ title: "Welcome!", description: "Your account is ready." });
           navigate(from);
@@ -94,13 +100,20 @@ const Auth = () => {
         }
 
         if (signUpData?.user && !signUpData.session) {
+          // Auto-confirm is on, so try signing in again
+          const { error: retryError } = await supabase.auth.signInWithPassword({ email, password });
+          if (!retryError) {
+            toast({ title: "Welcome!", description: "Your account is ready." });
+            navigate(from);
+            return;
+          }
           setFieldError("An account with this email already exists. Incorrect password.");
           triggerShake();
           return;
         }
       }
 
-      setFieldError("Something went wrong. Please try again.");
+      setFieldError(signInError.message || "Something went wrong. Please try again.");
       triggerShake();
     } catch {
       // Silent
