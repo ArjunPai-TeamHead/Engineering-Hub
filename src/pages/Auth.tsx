@@ -76,14 +76,7 @@ const Auth = () => {
       }
 
       if (signInError.message.toLowerCase().includes("invalid")) {
-        // Check if user exists first via a simple query
-        const { data: existingProfile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("user_id", email)
-          .maybeSingle();
-
-        // Only attempt signup if sign-in failed with invalid credentials
+        // Attempt signup — use generic error to prevent email enumeration
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -99,7 +92,8 @@ const Auth = () => {
           if (signUpError.message.toLowerCase().includes("rate limit")) {
             setFieldError("Too many attempts. Please wait a minute and try again.");
           } else {
-            setFieldError(signUpError.message);
+            // Generic message to prevent enumeration
+            setFieldError("Invalid email or password.");
           }
           triggerShake();
           return;
@@ -118,7 +112,8 @@ const Auth = () => {
             navigate(from);
             return;
           }
-          setFieldError("An account with this email already exists. Incorrect password.");
+          // Generic message — don't reveal whether account exists
+          setFieldError("Invalid email or password.");
           triggerShake();
           return;
         }
@@ -127,7 +122,7 @@ const Auth = () => {
       if (signInError.message.toLowerCase().includes("rate limit")) {
         setFieldError("Too many attempts. Please wait a minute and try again.");
       } else {
-        setFieldError(signInError.message || "Something went wrong. Please try again.");
+        setFieldError("Invalid email or password.");
       }
       triggerShake();
     } catch {

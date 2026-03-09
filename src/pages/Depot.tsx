@@ -190,7 +190,7 @@ const Depot = () => {
   };
 
   const handleCheckoutConfirm = async (details: CheckoutDetails) => {
-    const items = cartItems.map(({ name, price, quantity }) => ({ name, price, quantity }));
+    const items = cartItems.map(({ id, name, quantity }) => ({ id, name, quantity }));
 
     await supabase.from("orders").insert({
       user_id: user!.id,

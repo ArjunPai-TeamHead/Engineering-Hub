@@ -92,7 +92,7 @@ const CloudDatabase = () => {
       user_id: user.id,
       file_name: file.name,
       file_type: fileType,
-      file_url: urlData.publicUrl,
+      file_url: filePath,
       file_size: file.size,
     } as any);
     toast({ title: "File uploaded!" });

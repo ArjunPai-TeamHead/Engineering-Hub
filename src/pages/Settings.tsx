@@ -34,9 +34,9 @@ const Settings = () => {
     const filePath = `${user.id}/avatar.${ext}`;
     const { error } = await supabase.storage.from("user-files").upload(filePath, file, { upsert: true });
     if (error) { toast({ title: "Upload failed", description: error.message, variant: "destructive" }); setUploading(false); return; }
-    const { data: urlData } = supabase.storage.from("user-files").getPublicUrl(filePath);
-    setAvatarUrl(urlData.publicUrl);
-    await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", user.id);
+    // Store path, not public URL — bucket is private
+    setAvatarUrl(filePath);
+    await supabase.from("profiles").update({ avatar_url: filePath }).eq("user_id", user.id);
     await refreshProfile();
     toast({ title: "Avatar updated!" });
     setUploading(false);

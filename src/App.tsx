@@ -93,7 +93,7 @@ const App = () => (
                   <Route path="/workshop/fastener" element={<FastenerCalc />} />
                   <Route path="/workshop/connectors" element={<ConnectorMatcher />} />
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                   <Route path="/hub" element={<Hub />} />
                   <Route path="/cloud" element={<CloudDatabase />} />
                 </Route>
