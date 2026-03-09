@@ -76,6 +76,14 @@ const Auth = () => {
       }
 
       if (signInError.message.toLowerCase().includes("invalid")) {
+        // Check if user exists first via a simple query
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", email)
+          .maybeSingle();
+
+        // Only attempt signup if sign-in failed with invalid credentials
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -88,7 +96,11 @@ const Auth = () => {
         });
 
         if (signUpError) {
-          setFieldError(signUpError.message);
+          if (signUpError.message.toLowerCase().includes("rate limit")) {
+            setFieldError("Too many attempts. Please wait a minute and try again.");
+          } else {
+            setFieldError(signUpError.message);
+          }
           triggerShake();
           return;
         }
@@ -100,7 +112,6 @@ const Auth = () => {
         }
 
         if (signUpData?.user && !signUpData.session) {
-          // Auto-confirm is on, so try signing in again
           const { error: retryError } = await supabase.auth.signInWithPassword({ email, password });
           if (!retryError) {
             toast({ title: "Welcome!", description: "Your account is ready." });
@@ -113,7 +124,11 @@ const Auth = () => {
         }
       }
 
-      setFieldError(signInError.message || "Something went wrong. Please try again.");
+      if (signInError.message.toLowerCase().includes("rate limit")) {
+        setFieldError("Too many attempts. Please wait a minute and try again.");
+      } else {
+        setFieldError(signInError.message || "Something went wrong. Please try again.");
+      }
       triggerShake();
     } catch {
       // Silent
@@ -134,7 +149,7 @@ const Auth = () => {
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-emerald-500/5 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-emerald-500/3 blur-[120px] pointer-events-none" />
 
-      {/* Left Panel - Auth */}
+      {/* Left Panel - Auth (always visible) */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 relative z-10">
         <div className="w-full max-w-md">
           {/* Logo */}
@@ -202,7 +217,7 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Right Panel - Engineering Animation */}
+      {/* Right Panel - Engineering Animation (always visible on lg+) */}
       <div className="hidden lg:flex w-1/2 items-center justify-center relative">
         <EngineeringAnimation />
       </div>
