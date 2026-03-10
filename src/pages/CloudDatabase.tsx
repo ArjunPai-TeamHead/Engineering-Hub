@@ -122,7 +122,7 @@ const CloudDatabase = () => {
           <Database className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h2 className="text-xl font-bold text-foreground mb-2">Sign in to access Cloud Database</h2>
           <p className="text-sm text-muted-foreground mb-4">Save your code snippets, images, and files securely in the cloud.</p>
-          <Button onClick={() => navigate("/auth")}>Sign In</Button>
+          <Button onClick={() => navigate("/signin")}>Sign In</Button>
         </Card>
       </div>
     );

@@ -10,7 +10,8 @@ import { AppLayout } from "@/components/AppLayout";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 
-const Auth = lazy(() => import("./pages/Auth"));
+const SignIn = lazy(() => import("./pages/SignIn"));
+const SignUp = lazy(() => import("./pages/SignUp"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Hub = lazy(() => import("./pages/Hub"));
 const Lab = lazy(() => import("./pages/Lab"));
@@ -59,7 +60,9 @@ const App = () => (
           <AuthProvider>
             <Suspense fallback={null}>
               <Routes>
-                <Route path="/auth" element={<Auth />} />
+                <Route path="/signin" element={<SignIn />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/auth" element={<SignIn />} />
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/lab" element={<Lab />} />

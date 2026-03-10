@@ -99,7 +99,7 @@ export function AppSidebar() {
               <LogOut className="h-4 w-4" />
             </Button>
           ) : (
-            <Button variant="ghost" size="icon" onClick={() => navigate("/auth")} title="Sign in" className="rounded-2xl">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/signin")} title="Sign in" className="rounded-2xl">
               <LogIn className="h-4 w-4" />
             </Button>
           )}
