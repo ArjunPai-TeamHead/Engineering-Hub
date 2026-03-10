@@ -60,7 +60,9 @@ const App = () => (
           <AuthProvider>
             <Suspense fallback={null}>
               <Routes>
-                <Route path="/auth" element={<Auth />} />
+                <Route path="/signin" element={<SignIn />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/auth" element={<SignIn />} />
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/lab" element={<Lab />} />
