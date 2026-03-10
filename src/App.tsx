@@ -10,7 +10,8 @@ import { AppLayout } from "@/components/AppLayout";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 
-const Auth = lazy(() => import("./pages/Auth"));
+const SignIn = lazy(() => import("./pages/SignIn"));
+const SignUp = lazy(() => import("./pages/SignUp"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Hub = lazy(() => import("./pages/Hub"));
 const Lab = lazy(() => import("./pages/Lab"));
