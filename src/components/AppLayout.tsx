@@ -19,7 +19,7 @@ export function AppLayout() {
   }
 
   if (!loading && !user && !isPublic) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
   return (

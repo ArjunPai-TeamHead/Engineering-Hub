@@ -34,7 +34,7 @@ const Certificates = () => {
     return (
       <div className="mx-auto max-w-3xl p-6 text-center">
         <p className="text-muted-foreground">Please sign in to view your certificates.</p>
-        <Button asChild className="mt-4"><Link to="/auth">Sign In</Link></Button>
+        <Button asChild className="mt-4"><Link to="/signin">Sign In</Link></Button>
       </div>
     );
   }
