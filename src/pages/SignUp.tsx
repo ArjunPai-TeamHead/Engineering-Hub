@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Zap, User, AtSign, Mail, Lock, Eye, EyeOff, Check, X, Loader2 } from "lucide-react";
+import { Zap, User, AtSign, Mail, Lock, Eye, EyeOff, Check, X, Loader2, Dices } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +40,15 @@ const SignUp = () => {
     }, 500);
     return () => clearTimeout(timeout);
   }, [username]);
+
+  const generatePassword = useCallback(() => {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const array = new Uint32Array(16);
+    crypto.getRandomValues(array);
+    const pwd = Array.from(array, (v) => chars[v % chars.length]).join("");
+    setPassword(pwd);
+    setShowPassword(true);
+  }, []);
 
   const triggerShake = useCallback(() => {
     setShake(true);
@@ -199,15 +208,25 @@ const SignUp = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className={`pl-10 pr-10 h-12 rounded-xl border-white/10 bg-white/5 focus:bg-white/[0.08] focus:border-emerald-500/30 text-white placeholder:text-white/30 transition-all text-sm ${fieldError ? "border-red-500/50 ring-1 ring-red-500/20" : ""}`}
+                  className={`pl-10 pr-20 h-12 rounded-xl border-white/10 bg-white/5 focus:bg-white/[0.08] focus:border-emerald-500/30 text-white placeholder:text-white/30 transition-all text-sm ${fieldError ? "border-red-500/50 ring-1 ring-red-500/20" : ""}`}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={generatePassword}
+                    title="Generate strong password"
+                    className="text-white/30 hover:text-emerald-400 transition-colors"
+                  >
+                    <Dices className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-white/30 hover:text-white/60 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <PasswordStrengthBar password={password} />
