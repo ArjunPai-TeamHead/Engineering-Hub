@@ -41,6 +41,15 @@ const SignUp = () => {
     return () => clearTimeout(timeout);
   }, [username]);
 
+  const generatePassword = useCallback(() => {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const array = new Uint32Array(16);
+    crypto.getRandomValues(array);
+    const pwd = Array.from(array, (v) => chars[v % chars.length]).join("");
+    setPassword(pwd);
+    setShowPassword(true);
+  }, []);
+
   const triggerShake = useCallback(() => {
     setShake(true);
     setTimeout(() => setShake(false), 600);
