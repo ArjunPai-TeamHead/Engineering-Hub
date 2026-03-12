@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Zap, User, AtSign, Mail, Lock, Eye, EyeOff, Check, X, Loader2 } from "lucide-react";
+import { Zap, User, AtSign, Mail, Lock, Eye, EyeOff, Check, X, Loader2, Dices } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
