@@ -46,6 +46,7 @@ const WireGaugeCalc = lazy(() => import("./pages/forge/WireGaugeCalc"));
 const HeatsinkCalc = lazy(() => import("./pages/forge/HeatsinkCalc"));
 const FastenerCalc = lazy(() => import("./pages/forge/FastenerCalc"));
 const ConnectorMatcher = lazy(() => import("./pages/forge/ConnectorMatcher"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
