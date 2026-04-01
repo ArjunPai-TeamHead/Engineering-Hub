@@ -105,7 +105,7 @@ const ResetPassword = () => {
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(!s => !s)}
+                onClick={() => setShowPassword(v => !v)}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
