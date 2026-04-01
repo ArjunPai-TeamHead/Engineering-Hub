@@ -53,8 +53,8 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
   const [loading, setLoading] = useState(false);
 
   const [details, setDetails] = useState<CheckoutDetails>({
-    fullName: profile?.display_name || "",
-    email: user?.email || "",
+    fullName: "",
+    email: "",
     phone: "",
     companyName: "",
     gstNumber: "",
