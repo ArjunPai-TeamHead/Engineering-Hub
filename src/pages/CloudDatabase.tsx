@@ -47,7 +47,10 @@ const CloudDatabase = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     loadFiles();
   }, [user]);
 

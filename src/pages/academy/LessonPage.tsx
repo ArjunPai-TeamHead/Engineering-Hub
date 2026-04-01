@@ -194,7 +194,7 @@ const LessonPage = () => {
       </article>
 
       {lesson.quiz && lesson.quiz.length > 0 && (
-        <QuizSection quiz={lesson.quiz} onComplete={markComplete} />
+        <QuizSection key={lesson.id} quiz={lesson.quiz} onComplete={markComplete} />
       )}
 
       <div className="mt-6">

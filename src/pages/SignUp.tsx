@@ -42,11 +42,29 @@ const SignUp = () => {
   }, [username]);
 
   const generatePassword = useCallback(() => {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const digits = "0123456789";
+    const special = "!@#$%^&*";
+    const all = lower + upper + digits + special;
     const array = new Uint32Array(16);
     crypto.getRandomValues(array);
-    const pwd = Array.from(array, (v) => chars[v % chars.length]).join("");
-    setPassword(pwd);
+    // Ensure at least one of each required type
+    let pwd = [
+      lower[array[0] % lower.length],
+      upper[array[1] % upper.length],
+      digits[array[2] % digits.length],
+      special[array[3] % special.length],
+    ];
+    for (let i = 4; i < 16; i++) {
+      pwd.push(all[array[i] % all.length]);
+    }
+    // Shuffle
+    for (let i = pwd.length - 1; i > 0; i--) {
+      const j = array[i] % (i + 1);
+      [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
+    }
+    setPassword(pwd.join(""));
     setShowPassword(true);
   }, []);
 
@@ -73,6 +91,18 @@ const SignUp = () => {
 
     if (usernameAvailable === false) {
       setFieldError("That username is taken. Please choose another.");
+      triggerShake();
+      return;
+    }
+
+    if (password.length < 8) {
+      setFieldError("Password must be at least 8 characters.");
+      triggerShake();
+      return;
+    }
+
+    if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+      setFieldError("Password must contain both letters and numbers.");
       triggerShake();
       return;
     }
@@ -110,14 +140,12 @@ const SignUp = () => {
       }
 
       if (signUpData?.user && !signUpData.session) {
-        // Try auto sign-in (if auto-confirm is enabled)
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (!signInError) {
           toast({ title: "Welcome!", description: "Your account has been created." });
           navigate("/");
           return;
         }
-        // Email confirmation required
         toast({
           title: "Check your email",
           description: "We've sent you a confirmation link. Please verify your email to sign in.",
@@ -145,8 +173,11 @@ const SignUp = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 relative z-10">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-3 mb-8">
-            <img src={logoImg} alt="Logo" className="h-12 w-12 rounded-2xl object-cover" />
-            <p className="text-[11px] text-white/40">Engineering Intelligence Platform</p>
+            <img src={logoImg} alt="EngiNexus" className="h-14 w-14 rounded-2xl object-cover" />
+            <div>
+              <h1 className="text-xl font-bold text-white tracking-tight">EngiNexus</h1>
+              <p className="text-xs text-white/50">Engineering Intelligence Platform</p>
+            </div>
           </div>
 
           <div className={`auth-glass-dark rounded-3xl p-8 transition-all ${shake ? "animate-shake" : ""}`}>
@@ -203,11 +234,11 @@ const SignUp = () => {
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Password"
+                  placeholder="Password (letters + numbers, min 8)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                   className={`pl-10 pr-20 h-12 rounded-xl border-white/10 bg-white/5 focus:bg-white/[0.08] focus:border-emerald-500/30 text-white placeholder:text-white/30 transition-all text-sm ${fieldError ? "border-red-500/50 ring-1 ring-red-500/20" : ""}`}
                 />
                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
