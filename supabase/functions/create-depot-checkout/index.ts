@@ -7,7 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Server-side authoritative price catalog (prices in INR)
 const PRICE_CATALOG: Record<string, number> = {
   "arduino-uno": 1339, "arduino-mega": 1999, "arduino-nano": 199,
   "rpi-4": 7499, "rpi-pico": 450, "esp32": 599, "esp8266": 299,
@@ -57,27 +56,20 @@ serve(async (req) => {
       });
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user: authUser }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !authUser?.email) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
       });
     }
 
-    const { data: userData } = await supabaseClient.auth.getUser(token);
-    const user = userData?.user;
-    if (!user?.email) throw new Error("User not authenticated");
-
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
 
     const { items } = await req.json();
-    // items: Array<{ id: string, name: string, quantity: number }>
 
-    // Validate and build line items using server-side prices
     const line_items = items.map((item: { id: string; name: string; quantity: number }) => {
       const catalogPrice = PRICE_CATALOG[item.id];
       if (!catalogPrice) {
@@ -88,19 +80,19 @@ serve(async (req) => {
         price_data: {
           currency: "inr",
           product_data: { name: item.name },
-          unit_amount: catalogPrice * 100, // paise
+          unit_amount: catalogPrice * 100,
         },
         quantity,
       };
     });
 
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: authUser.email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) customerId = customers.data[0].id;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
+      customer_email: customerId ? undefined : authUser.email,
       line_items,
       mode: "payment",
       success_url: `${req.headers.get("origin")}/depot?success=true`,
@@ -112,7 +104,8 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Checkout error:", error);
+    return new Response(JSON.stringify({ error: "An internal error occurred. Please try again." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

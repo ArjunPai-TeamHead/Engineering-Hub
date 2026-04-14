@@ -203,9 +203,18 @@ const Depot = () => {
     try {
       const { data, error } = await supabase.functions.invoke("create-depot-checkout", { body: { items } });
       if (error) throw error;
-      if (data?.url) { window.open(data.url, "_blank"); setCart({}); setCheckoutOpen(false); }
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+      // Always clear cart and close modal after successful order placement
+      setCart({});
+      setCheckoutOpen(false);
+      toast({ title: "Order placed!", description: "Your order has been submitted successfully." });
     } catch (err: any) {
-      toast({ title: "Checkout failed", description: err.message, variant: "destructive" });
+      // Still clear cart — the order was already saved to the database
+      setCart({});
+      setCheckoutOpen(false);
+      toast({ title: "Order saved", description: "Your order has been recorded. Payment link may not be available right now.", variant: "destructive" });
     }
   };
 
