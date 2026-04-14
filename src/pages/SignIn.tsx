@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Zap, Mail, Lock, Eye, EyeOff, X } from "lucide-react";
+import { Zap, Mail, Lock, Eye, EyeOff, X, AtSign } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +9,7 @@ import EngineeringAnimation from "@/components/auth/EngineeringAnimation";
 import logoImg from "@/assets/logo.jpeg";
 
 const SignIn = () => {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -28,19 +28,41 @@ const SignIn = () => {
     setTimeout(() => setShake(false), 600);
   }, []);
 
+  const resolveEmail = async (input: string): Promise<string | null> => {
+    const trimmed = input.trim();
+    if (trimmed.includes("@")) return trimmed;
+    // Look up username in profiles
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .ilike("username", trimmed)
+      .maybeSingle();
+    if (!data) return null;
+    // We can't get the email from profiles, so use a workaround:
+    // Try to get it from auth - but we don't have admin access.
+    // Instead, we'll store email lookup - but actually we need to sign in differently.
+    // The cleanest approach: look up the user's email from the profiles table if stored,
+    // or use the auth admin API. Since we can't do that client-side, 
+    // let's check if the user object has email in metadata.
+    // Actually, let's just query the user's email from the auth user directly.
+    // We need to add email to profiles or use an edge function.
+    // For now, let's return null and handle it with a message.
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldError(null);
 
     if (forgotMode) {
-      if (!email.trim()) {
+      if (!identifier.trim()) {
         setFieldError("Please enter your email address.");
         triggerShake();
         return;
       }
       setLoading(true);
       try {
-        await supabase.auth.resetPasswordForEmail(email, {
+        await supabase.auth.resetPasswordForEmail(identifier, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         setResetSent(true);
@@ -63,6 +85,40 @@ const SignIn = () => {
     setLoading(true);
 
     try {
+      let email = identifier.trim();
+
+      // If it doesn't look like an email, resolve username
+      if (!email.includes("@")) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .ilike("username", email)
+          .maybeSingle();
+
+        if (!profileData) {
+          setFieldError("No account found with that username.");
+          triggerShake();
+          setLoading(false);
+          return;
+        }
+
+        // We need the email. Let's try signing in with a lookup edge function,
+        // or use a workaround: query with service role.
+        // Simplest: store email in profiles, or use an edge function.
+        // For now, let's use an edge function approach.
+        const { data: fnData, error: fnError } = await supabase.functions.invoke("resolve-username", {
+          body: { username: email },
+        });
+
+        if (fnError || !fnData?.email) {
+          setFieldError("Could not resolve username. Try using your email instead.");
+          triggerShake();
+          setLoading(false);
+          return;
+        }
+        email = fnData.email;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (!error) {
@@ -74,7 +130,7 @@ const SignIn = () => {
       if (error.message.toLowerCase().includes("rate limit")) {
         setFieldError("Too many attempts. Please wait a minute and try again.");
       } else {
-        setFieldError("Invalid email or password.");
+        setFieldError("Invalid email/username or password.");
       }
       triggerShake();
     } catch {
@@ -99,8 +155,8 @@ const SignIn = () => {
           <div className="flex items-center gap-3 mb-8">
             <img src={logoImg} alt="EngiNexus" className="h-14 w-14 rounded-2xl object-cover" />
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">EngiNexus</h1>
-              <p className="text-xs text-white/50">Engineering Intelligence Platform</p>
+              <h1 className="text-2xl font-bold text-white tracking-tight">EngiNexus</h1>
+              <p className="text-sm text-emerald-400/70 font-medium">Engineering Intelligence Platform</p>
             </div>
           </div>
 
@@ -112,7 +168,7 @@ const SignIn = () => {
               <p className="text-sm text-white/40 mt-1">
                 {forgotMode
                   ? "Enter your email and we'll send a reset link"
-                  : "Enter your credentials to continue"}
+                  : "Use your email or username to continue"}
               </p>
             </div>
 
@@ -131,12 +187,16 @@ const SignIn = () => {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="relative group">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
+                  {identifier.includes("@") ? (
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
+                  ) : (
+                    <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 transition-colors group-focus-within:text-emerald-400" />
+                  )}
                   <Input
-                    type="email"
-                    placeholder="Email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    placeholder="Email or username"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     required
                     className="pl-10 h-12 rounded-xl border-white/10 bg-white/5 focus:bg-white/[0.08] focus:border-emerald-500/30 text-white placeholder:text-white/30 transition-all text-sm"
                   />
@@ -177,7 +237,7 @@ const SignIn = () => {
                 )}
 
                 {fieldError && (
-                  <div className="text-sm text-destructive flex items-start gap-2 px-1">
+                  <div className="text-sm text-red-400 flex items-start gap-2 px-1">
                     <X className="h-4 w-4 shrink-0 mt-0.5" />
                     <span>{fieldError}</span>
                   </div>

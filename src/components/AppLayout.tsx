@@ -2,18 +2,19 @@ import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 
-const PUBLIC_ROUTES = ["/"];
+const PUBLIC_ROUTES = ["/", "/hub", "/workshop", "/lab", "/depot"];
 
 export function AppLayout() {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const isPublic = PUBLIC_ROUTES.includes(location.pathname);
+  const isPublic = PUBLIC_ROUTES.includes(location.pathname) || location.pathname.startsWith("/workshop/") || location.pathname.startsWith("/lab/");
 
   if (loading && !isPublic) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

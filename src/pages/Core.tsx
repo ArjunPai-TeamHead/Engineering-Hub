@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { BrainCircuit, Send, Sparkles, Code, Lightbulb, Bug, FileText, Loader2, AlertCircle } from "lucide-react";
+import { BrainCircuit, Send, Sparkles, Code, Lightbulb, Bug, FileText, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import DOMPurify from "dompurify";
 
 interface Message {
   role: "user" | "assistant";
@@ -16,7 +17,7 @@ const capabilities = [
   { icon: Bug, title: "Error Translator", description: "Paste a compiler error → plain English", prompt: "Explain this error: avrdude: stk500_getsync() attempt 1 of 10: not in sync: resp=0x00" },
   { icon: Code, title: "Code Translation", description: "Convert between Python and C++", prompt: "Convert this Arduino C++ code to MicroPython: void setup() { Serial.begin(9600); }" },
   { icon: Sparkles, title: "Component Substitution", description: '"What can I use instead of X?"', prompt: "What can I use instead of a L298N motor driver?" },
-  { icon: Lightbulb, title: "Idea Generator", description: "\"I have a servo and LDR, what can I build?\"", prompt: "I have a servo motor, LDR, and Arduino Uno. What interesting projects can I build?" },
+  { icon: Lightbulb, title: "Idea Generator", description: '"I have a servo and LDR, what can I build?"', prompt: "I have a servo motor, LDR, and Arduino Uno. What interesting projects can I build?" },
   { icon: FileText, title: "Code Optimizer", description: "Suggest memory/speed improvements", prompt: "How can I optimize this code for lower memory usage on an Arduino Uno?" },
   { icon: FileText, title: "Documentation Writer", description: "Auto-generate code comments", prompt: "Add comprehensive comments to this Arduino code: void loop() { int val = analogRead(A0); if(val > 512) { digitalWrite(13, HIGH); } else { digitalWrite(13, LOW); } }" },
 ];
@@ -82,7 +83,6 @@ const Core = () => {
       let buffer = "";
       let streamDone = false;
 
-      // Add empty assistant message
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       while (!streamDone) {
@@ -142,10 +142,12 @@ const Core = () => {
             <div key={i}>
               {part.split("\n").map((line, j) => {
                 if (!line) return <div key={j} className="h-1" />;
+                // Sanitize: only allow strong and em tags
                 const boldLine = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-                if (line.match(/^\d+\.\s/)) return <p key={j} className="ml-2" dangerouslySetInnerHTML={{ __html: boldLine }} />;
-                if (line.startsWith("- ") || line.startsWith("• ")) return <p key={j} className="ml-2" dangerouslySetInnerHTML={{ __html: "• " + boldLine.slice(2) }} />;
-                return <p key={j} dangerouslySetInnerHTML={{ __html: boldLine }} />;
+                const sanitized = DOMPurify.sanitize(boldLine, { ALLOWED_TAGS: ["strong", "em"] });
+                if (line.match(/^\d+\.\s/)) return <p key={j} className="ml-2" dangerouslySetInnerHTML={{ __html: sanitized }} />;
+                if (line.startsWith("- ") || line.startsWith("• ")) return <p key={j} className="ml-2" dangerouslySetInnerHTML={{ __html: "• " + DOMPurify.sanitize(boldLine.slice(2), { ALLOWED_TAGS: ["strong", "em"] }) }} />;
+                return <p key={j} dangerouslySetInnerHTML={{ __html: sanitized }} />;
               })}
             </div>
           );
@@ -156,7 +158,6 @@ const Core = () => {
 
   return (
     <div className="flex h-[calc(100vh-3rem)] flex-col">
-      {/* Header */}
       <div className="border-b border-border px-6 py-3 flex items-center gap-3">
         <div className="rounded-lg bg-rose/10 p-1.5" style={{ boxShadow: "0 0 12px hsl(346 77% 50% / 0.2)" }}>
           <BrainCircuit className="h-5 w-5 text-rose" />
@@ -168,7 +169,6 @@ const Core = () => {
         <Badge variant="outline" className="ml-auto text-xs text-accent border-accent/30">Live AI</Badge>
       </div>
 
-      {/* Capabilities (shown when no messages) */}
       {messages.length === 0 && (
         <div className="px-6 pt-4">
           <p className="text-xs text-muted-foreground mb-3">Try one of these or ask anything engineering-related:</p>
@@ -188,7 +188,6 @@ const Core = () => {
         </div>
       )}
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -211,7 +210,6 @@ const Core = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
       <div className="border-t border-border p-4">
         <div className="flex gap-2">
           <Input
