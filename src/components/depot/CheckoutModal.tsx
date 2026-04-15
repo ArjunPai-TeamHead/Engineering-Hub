@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, Truck, User, Package, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
+import { CreditCard, Truck, User, Package, ArrowRight, ArrowLeft, Loader2, Wallet, Banknote, Building2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface CartItem {
@@ -45,11 +46,14 @@ export interface CheckoutDetails {
   sameAsShipping: boolean;
   shippingMethod: string;
   couponCode: string;
+  paymentMethod: string;
 }
+
+const GST_RATE = 0.18; // 18% GST
 
 const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModalProps) => {
   const { user, profile } = useAuth();
-  const [step, setStep] = useState<"cart" | "details" | "shipping" | "confirm">("cart");
+  const [step, setStep] = useState<"cart" | "details" | "shipping" | "payment" | "confirm">("cart");
   const [loading, setLoading] = useState(false);
 
   const [details, setDetails] = useState<CheckoutDetails>({
@@ -72,13 +76,15 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
     sameAsShipping: true,
     shippingMethod: "standard",
     couponCode: "",
+    paymentMethod: "stripe",
   });
 
   const set = (key: keyof CheckoutDetails, val: string | boolean) =>
     setDetails(prev => ({ ...prev, [key]: val }));
 
   const shippingCost = details.shippingMethod === "express" ? 149 : details.shippingMethod === "sameday" ? 299 : 49;
-  const grandTotal = total + shippingCost;
+  const gstAmount = Math.round(total * GST_RATE);
+  const grandTotal = total + gstAmount + shippingCost;
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -94,6 +100,7 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
             {step === "cart" && <><Package className="h-5 w-5 text-primary" /> Your Cart</>}
             {step === "details" && <><User className="h-5 w-5 text-primary" /> Customer Details</>}
             {step === "shipping" && <><Truck className="h-5 w-5 text-primary" /> Shipping & Billing</>}
+            {step === "payment" && <><CreditCard className="h-5 w-5 text-primary" /> Payment Method</>}
             {step === "confirm" && <><CreditCard className="h-5 w-5 text-primary" /> Order Summary</>}
           </DialogTitle>
         </DialogHeader>
@@ -110,9 +117,20 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
                   <span className="font-mono text-sm font-bold text-foreground">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
                 </div>
               ))}
-              <div className="flex justify-between pt-2">
-                <span className="font-semibold text-foreground">Subtotal</span>
-                <span className="font-mono font-bold text-foreground">₹{total.toLocaleString("en-IN")}</span>
+              <div className="space-y-1 pt-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-mono text-foreground">₹{total.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">GST (18%)</span>
+                  <span className="font-mono text-foreground">₹{gstAmount.toLocaleString("en-IN")}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-semibold">
+                  <span className="text-foreground">Subtotal + Tax</span>
+                  <span className="font-mono text-foreground">₹{(total + gstAmount).toLocaleString("en-IN")}</span>
+                </div>
               </div>
             </div>
           )}
@@ -139,14 +157,9 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">GST/VAT Number (optional)</Label>
+                <Label className="text-xs">GST/VAT Number (optional — for tax invoice)</Label>
                 <Input value={details.gstNumber} onChange={e => set("gstNumber", e.target.value)} placeholder="22AAAAA0000A1Z5" />
               </div>
-              {user && (
-                <div className="rounded-lg border border-border p-3 bg-muted/50">
-                  <p className="text-xs text-muted-foreground">Account ID: <span className="font-mono text-foreground">{user.id.slice(0, 8)}...</span></p>
-                </div>
-              )}
             </div>
           )}
 
@@ -237,6 +250,54 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
             </div>
           )}
 
+          {step === "payment" && (
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Select Payment Method</p>
+              <RadioGroup value={details.paymentMethod} onValueChange={v => set("paymentMethod", v)} className="space-y-3">
+                <div className="flex items-center gap-3 rounded-lg border border-border p-3 hover:border-primary/30 transition-colors">
+                  <RadioGroupItem value="stripe" id="pm-stripe" />
+                  <Label htmlFor="pm-stripe" className="flex items-center gap-2 cursor-pointer flex-1">
+                    <CreditCard className="h-4 w-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Credit / Debit Card</p>
+                      <p className="text-[10px] text-muted-foreground">Visa, Mastercard, RuPay via Stripe</p>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg border border-border p-3 hover:border-primary/30 transition-colors">
+                  <RadioGroupItem value="upi" id="pm-upi" />
+                  <Label htmlFor="pm-upi" className="flex items-center gap-2 cursor-pointer flex-1">
+                    <Wallet className="h-4 w-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">UPI</p>
+                      <p className="text-[10px] text-muted-foreground">Google Pay, PhonePe, Paytm</p>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg border border-border p-3 hover:border-primary/30 transition-colors">
+                  <RadioGroupItem value="netbanking" id="pm-nb" />
+                  <Label htmlFor="pm-nb" className="flex items-center gap-2 cursor-pointer flex-1">
+                    <Building2 className="h-4 w-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Net Banking</p>
+                      <p className="text-[10px] text-muted-foreground">All major Indian banks</p>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg border border-border p-3 hover:border-primary/30 transition-colors">
+                  <RadioGroupItem value="cod" id="pm-cod" />
+                  <Label htmlFor="pm-cod" className="flex items-center gap-2 cursor-pointer flex-1">
+                    <Banknote className="h-4 w-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Cash on Delivery</p>
+                      <p className="text-[10px] text-muted-foreground">Pay when your order arrives</p>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
           {step === "confirm" && (
             <div className="space-y-4">
               <div className="rounded-lg border border-border p-4 space-y-2">
@@ -246,6 +307,22 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
                 <p className="text-xs text-muted-foreground">{details.city}, {details.state} {details.pinCode}</p>
                 <p className="text-xs text-muted-foreground">{details.phone}</p>
               </div>
+
+              <div className="rounded-lg border border-border p-4 space-y-1">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Payment</p>
+                <p className="text-sm text-foreground capitalize">{
+                  details.paymentMethod === "stripe" ? "Credit / Debit Card" :
+                  details.paymentMethod === "upi" ? "UPI" :
+                  details.paymentMethod === "netbanking" ? "Net Banking" : "Cash on Delivery"
+                }</p>
+              </div>
+
+              {details.gstNumber && (
+                <div className="rounded-lg border border-border p-4">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">GST Invoice</p>
+                  <p className="text-sm text-foreground font-mono">{details.gstNumber}</p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 {items.map(item => (
@@ -258,6 +335,10 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-mono text-foreground">₹{total.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">GST (18%)</span>
+                  <span className="font-mono text-foreground">₹{gstAmount.toLocaleString("en-IN")}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping ({details.shippingMethod})</span>
@@ -278,7 +359,8 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
             <Button variant="outline" size="sm" onClick={() => {
               if (step === "details") setStep("cart");
               if (step === "shipping") setStep("details");
-              if (step === "confirm") setStep("shipping");
+              if (step === "payment") setStep("shipping");
+              if (step === "confirm") setStep("payment");
             }}>
               <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
             </Button>
@@ -295,7 +377,12 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
             </Button>
           )}
           {step === "shipping" && (
-            <Button size="sm" onClick={() => setStep("confirm")} disabled={!details.addressLine1 || !details.city || !details.state || !details.pinCode}>
+            <Button size="sm" onClick={() => setStep("payment")} disabled={!details.addressLine1 || !details.city || !details.state || !details.pinCode}>
+              Payment <ArrowRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          )}
+          {step === "payment" && (
+            <Button size="sm" onClick={() => setStep("confirm")}>
               Review Order <ArrowRight className="h-3.5 w-3.5 ml-1" />
             </Button>
           )}
