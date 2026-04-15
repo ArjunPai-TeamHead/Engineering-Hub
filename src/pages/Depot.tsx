@@ -368,13 +368,34 @@ const Depot = () => {
                         {statusIcon[order.status] || statusIcon.pending}
                         <span className="text-sm font-medium text-foreground capitalize">{order.status}</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</span>
+                        {order.status === "pending" && (
+                          <Button variant="ghost" size="sm" className="text-xs text-destructive h-7" onClick={async () => {
+                            await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
+                            setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: "cancelled" } : o));
+                            toast({ title: "Order cancelled" });
+                          }}>Cancel</Button>
+                        )}
+                      </div>
                     </div>
+                    {/* Delivery tracking bar */}
+                    {order.status !== "cancelled" && order.status !== "failed" && (
+                      <div className="mb-3">
+                        <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                          <span>Placed</span><span>Processing</span><span>Shipped</span><span>Delivered</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="h-full rounded-full bg-primary transition-all" style={{
+                            width: order.status === "completed" ? "100%" : order.status === "shipped" ? "75%" : order.status === "processing" ? "50%" : "25%",
+                          }} />
+                        </div>
+                      </div>
+                    )}
                     <div className="space-y-1">
                       {(order.items as any[]).map((item: any, i: number) => (
                         <div key={i} className="flex justify-between text-sm">
                           <span className="text-muted-foreground">{item.name} × {item.quantity}</span>
-                          <span className="font-mono text-foreground">₹{(item.price * item.quantity).toLocaleString("en-IN")}</span>
                         </div>
                       ))}
                     </div>
