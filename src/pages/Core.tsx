@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { BrainCircuit, Send, Sparkles, Code, Lightbulb, Bug, FileText, Loader2 } from "lucide-react";
+import { BrainCircuit, Send, Sparkles, Code, Lightbulb, Bug, FileText, Loader2, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,15 @@ interface Message {
   role: "user" | "assistant";
   content: string;
 }
+
+const AI_MODELS = [
+  { id: "google/gemini-3-flash-preview", label: "Gemini 3 Flash", description: "Fast & balanced" },
+  { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", description: "Best reasoning" },
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", description: "Good balance" },
+  { id: "openai/gpt-5", label: "GPT-5", description: "Powerful all-rounder" },
+  { id: "openai/gpt-5-mini", label: "GPT-5 Mini", description: "Fast & affordable" },
+  { id: "openai/gpt-5.2", label: "GPT-5.2", description: "Latest & best" },
+];
 
 const capabilities = [
   { icon: Bug, title: "Error Translator", description: "Paste a compiler error → plain English", prompt: "Explain this error: avrdude: stk500_getsync() attempt 1 of 10: not in sync: resp=0x00" },
@@ -28,6 +38,7 @@ const Core = () => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("google/gemini-3-flash-preview");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,7 +73,7 @@ const Core = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages, model: selectedModel }),
       });
 
       if (!resp.ok) {
@@ -142,7 +153,6 @@ const Core = () => {
             <div key={i}>
               {part.split("\n").map((line, j) => {
                 if (!line) return <div key={j} className="h-1" />;
-                // Sanitize: only allow strong and em tags
                 const boldLine = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
                 const sanitized = DOMPurify.sanitize(boldLine, { ALLOWED_TAGS: ["strong", "em"] });
                 if (line.match(/^\d+\.\s/)) return <p key={j} className="ml-2" dangerouslySetInnerHTML={{ __html: sanitized }} />;
@@ -164,9 +174,26 @@ const Core = () => {
         </div>
         <div>
           <h1 className="text-lg font-bold text-foreground">The Core</h1>
-          <p className="text-xs text-muted-foreground">AI Engineering Assistant · Powered by Lovable AI</p>
+          <p className="text-xs text-muted-foreground">AI Engineering Assistant</p>
         </div>
-        <Badge variant="outline" className="ml-auto text-xs text-accent border-accent/30">Live AI</Badge>
+        <div className="ml-auto flex items-center gap-2">
+          <Select value={selectedModel} onValueChange={setSelectedModel}>
+            <SelectTrigger className="w-[180px] h-8 text-xs rounded-lg">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {AI_MODELS.map(m => (
+                <SelectItem key={m.id} value={m.id} className="text-xs">
+                  <div>
+                    <span className="font-medium">{m.label}</span>
+                    <span className="text-muted-foreground ml-1">— {m.description}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Badge variant="outline" className="text-xs text-accent border-accent/30">Live AI</Badge>
+        </div>
       </div>
 
       {messages.length === 0 && (

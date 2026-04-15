@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, XCircle, Trophy } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Send, Loader2, Upload, Camera, BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { courses, QuizQuestion } from "@/data/courses";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { courses } from "@/data/courses";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -49,68 +49,206 @@ const renderContent = (content: string) => {
   return elements;
 };
 
-const QuizSection = ({ quiz, onComplete }: { quiz: QuizQuestion[]; onComplete: () => void }) => {
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [submitted, setSubmitted] = useState(false);
+// AI Sidebar helper
+const AISidebar = ({ lessonTitle, lessonContent }: { lessonTitle: string; lessonContent: string }) => {
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
 
-  const score = quiz.reduce((acc, q, i) => {
-    return acc + (answers[i] === String(q.correctIndex) ? 1 : 0);
-  }, 0);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    if (score === quiz.length) {
-      onComplete();
+  const send = async () => {
+    if (!input.trim() || loading) return;
+    const userMsg = { role: "user" as const, content: input.trim() };
+    const allMsgs = [...messages, userMsg];
+    setMessages(allMsgs);
+    setInput("");
+    setLoading(true);
+
+    let assistantContent = "";
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) { setMessages(prev => [...prev, { role: "assistant", content: "Please sign in to use the AI helper." }]); setLoading(false); return; }
+
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/academy-ai`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ messages: allMsgs, lessonTitle, lessonContext: lessonContent.slice(0, 2000) }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        setMessages(prev => [...prev, { role: "assistant", content: err.error || "Something went wrong." }]);
+        setLoading(false);
+        return;
+      }
+
+      const reader = resp.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let idx: number;
+        while ((idx = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const json = line.slice(6).trim();
+          if (json === "[DONE]") break;
+          try {
+            const chunk = JSON.parse(json).choices?.[0]?.delta?.content;
+            if (chunk) {
+              assistantContent += chunk;
+              setMessages(prev => {
+                const u = [...prev];
+                u[u.length - 1] = { role: "assistant", content: assistantContent };
+                return u;
+              });
+            }
+          } catch { buffer = line + "\n" + buffer; break; }
+        }
+      }
+    } catch {
+      setMessages(prev => [...prev, { role: "assistant", content: "Connection error. Please try again." }]);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="mt-8 space-y-4">
-      <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-        <Trophy className="h-5 w-5 text-amber" /> Lesson Quiz
-      </h2>
-
-      {quiz.map((q, i) => (
-        <Card key={i} className={submitted ? (answers[i] === String(q.correctIndex) ? "border-primary/50" : "border-destructive/50") : ""}>
-          <CardContent className="pt-4">
-            <p className="mb-3 text-sm font-medium text-foreground">{i + 1}. {q.question}</p>
-            <RadioGroup
-              value={answers[i] ?? ""}
-              onValueChange={(v) => !submitted && setAnswers({ ...answers, [i]: v })}
-              disabled={submitted}
-            >
-              {q.options.map((opt, j) => (
-                <div key={j} className="flex items-center gap-2">
-                  <RadioGroupItem value={String(j)} id={`q${i}-o${j}`} />
-                  <Label htmlFor={`q${i}-o${j}`} className={`text-sm cursor-pointer ${
-                    submitted && j === q.correctIndex ? "text-primary font-semibold" :
-                    submitted && answers[i] === String(j) && j !== q.correctIndex ? "text-destructive line-through" : ""
-                  }`}>
-                    {opt}
-                    {submitted && j === q.correctIndex && <CheckCircle2 className="inline ml-1 h-3.5 w-3.5 text-primary" />}
-                    {submitted && answers[i] === String(j) && j !== q.correctIndex && <XCircle className="inline ml-1 h-3.5 w-3.5 text-destructive" />}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </CardContent>
-        </Card>
-      ))}
-
-      {!submitted ? (
-        <Button onClick={handleSubmit} disabled={Object.keys(answers).length < quiz.length}>
-          Submit Answers
+    <div className="flex flex-col h-full border-l border-border">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+        <BrainCircuit className="h-4 w-4 text-violet-500" />
+        <span className="text-sm font-semibold text-foreground">AI Helper</span>
+        <Badge variant="outline" className="text-[10px] ml-auto">Live</Badge>
+      </div>
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {messages.length === 0 && (
+          <div className="text-center text-xs text-muted-foreground mt-8 px-4">
+            <p className="mb-2">Ask me anything about this lesson!</p>
+            <p className="text-[10px]">e.g. "Explain how pull-up resistors work" or "What pin should I connect the LED to?"</p>
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={`text-xs leading-relaxed rounded-lg p-2.5 ${m.role === "user" ? "bg-primary/10 text-foreground ml-4" : "bg-muted text-foreground mr-4"}`}>
+            {m.content || (loading && i === messages.length - 1 ? <Loader2 className="h-3 w-3 animate-spin" /> : null)}
+          </div>
+        ))}
+        <div ref={endRef} />
+      </div>
+      <div className="p-3 border-t border-border flex gap-2">
+        <Input
+          placeholder="Ask a question..."
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") send(); }}
+          className="text-xs h-8"
+          disabled={loading}
+        />
+        <Button size="icon" className="h-8 w-8 shrink-0" onClick={send} disabled={loading || !input.trim()}>
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
         </Button>
-      ) : (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="pt-4">
-            <p className="text-sm font-medium text-foreground">
-              Score: {score}/{quiz.length} {score === quiz.length ? "🎉 Perfect!" : score >= quiz.length / 2 ? "👍 Good job!" : "📚 Review and try again!"}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      </div>
     </div>
+  );
+};
+
+// Photo upload grading
+const PhotoGrading = ({ lessonId, courseId, onGraded }: { lessonId: string; courseId: string; onGraded: (grade: string) => void }) => {
+  const { user } = useAuth();
+  const [uploading, setUploading] = useState(false);
+  const [grading, setGrading] = useState(false);
+  const [result, setResult] = useState<{ grade: string; feedback: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploading(true);
+
+    // Upload to storage
+    const path = `${user.id}/academy/${courseId}/${lessonId}/${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from("user-files").upload(path, file);
+    if (upErr) { toast.error("Upload failed"); setUploading(false); return; }
+
+    // Get signed URL for AI grading
+    const { data: urlData } = await supabase.storage.from("user-files").createSignedUrl(path, 3600);
+    if (!urlData?.signedUrl) { toast.error("Could not get file URL"); setUploading(false); return; }
+
+    setUploading(false);
+    setGrading(true);
+
+    // Call AI grading
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/academy-grade`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ imageUrl: urlData.signedUrl, lessonId, courseId }),
+      });
+      const data = await resp.json();
+      if (data.grade) {
+        setResult({ grade: data.grade, feedback: data.feedback });
+        if (data.grade === "Excellent" || data.grade === "Good") {
+          onGraded(data.grade);
+        }
+      } else {
+        setResult({ grade: "Error", feedback: data.error || "Could not grade. Try again." });
+      }
+    } catch {
+      setResult({ grade: "Error", feedback: "Connection error. Please try again." });
+    } finally {
+      setGrading(false);
+    }
+  };
+
+  const gradeColor: Record<string, string> = {
+    Excellent: "text-green-500 border-green-500/30 bg-green-500/10",
+    Good: "text-blue-500 border-blue-500/30 bg-blue-500/10",
+    Wrong: "text-red-500 border-red-500/30 bg-red-500/10",
+    Poor: "text-amber-500 border-amber-500/30 bg-amber-500/10",
+    Error: "text-muted-foreground border-border bg-muted",
+  };
+
+  return (
+    <Card className="mt-6 border-violet-500/20">
+      <CardContent className="pt-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Camera className="h-4 w-4 text-violet-500" />
+          <span className="text-sm font-semibold text-foreground">Submit Your Result</span>
+        </div>
+        <p className="text-xs text-muted-foreground">Upload a photo of your completed project and the AI will grade your work.</p>
+
+        {result ? (
+          <div className={`rounded-lg border p-4 ${gradeColor[result.grade] || gradeColor.Error}`}>
+            <p className="text-sm font-bold mb-1">Grade: {result.grade}</p>
+            <p className="text-xs leading-relaxed">{result.feedback}</p>
+            <Button variant="outline" size="sm" className="mt-3 text-xs" onClick={() => { setResult(null); fileRef.current!.value = ""; }}>
+              Upload Again
+            </Button>
+          </div>
+        ) : (
+          <div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+            <Button variant="outline" size="sm" className="gap-2 text-xs" onClick={() => fileRef.current?.click()} disabled={uploading || grading}>
+              {uploading ? <><Loader2 className="h-3 w-3 animate-spin" /> Uploading...</> :
+               grading ? <><Loader2 className="h-3 w-3 animate-spin" /> AI is grading...</> :
+               <><Upload className="h-3 w-3" /> Upload Photo</>}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
@@ -156,7 +294,6 @@ const LessonPage = () => {
     }, { onConflict: "user_id,course_id,lesson_id" });
 
     if (error) {
-      // If conflict upsert fails, try insert
       await supabase.from("course_progress").insert({
         user_id: user.id,
         course_id: course.id,
@@ -184,42 +321,56 @@ const LessonPage = () => {
   const next = lessonIdx < course.lessons.length - 1 ? course.lessons[lessonIdx + 1] : null;
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <Button variant="ghost" size="sm" asChild className="mb-4">
-        <Link to={`/academy/course/${course.id}`}><ArrowLeft className="mr-2 h-4 w-4" />{course.title}</Link>
-      </Button>
-
-      <article className="prose-sm">
-        {renderContent(lesson.content)}
-      </article>
-
-      {lesson.quiz && lesson.quiz.length > 0 && (
-        <QuizSection key={lesson.id} quiz={lesson.quiz} onComplete={markComplete} />
-      )}
-
-      <div className="mt-6">
-        {completed ? (
-          <div className="flex items-center gap-2 text-sm text-primary font-medium">
-            <CheckCircle2 className="h-5 w-5" /> Lesson Complete
-          </div>
-        ) : (
-          <Button onClick={markComplete} disabled={loading} variant="outline" size="sm">
-            {loading ? "Saving..." : "Mark as Complete"}
+    <div className="flex h-[calc(100vh-3rem)]">
+      {/* Main content */}
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="mx-auto max-w-3xl">
+          <Button variant="ghost" size="sm" asChild className="mb-4">
+            <Link to={`/academy/course/${course.id}`}><ArrowLeft className="mr-2 h-4 w-4" />{course.title}</Link>
           </Button>
-        )}
+
+          <article className="prose-sm">
+            {renderContent(lesson.content)}
+          </article>
+
+          {/* Photo grading replaces quizzes */}
+          <PhotoGrading
+            key={lesson.id}
+            lessonId={lesson.id}
+            courseId={course.id}
+            onGraded={() => markComplete()}
+          />
+
+          <div className="mt-6">
+            {completed ? (
+              <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                <CheckCircle2 className="h-5 w-5" /> Lesson Complete
+              </div>
+            ) : (
+              <Button onClick={markComplete} disabled={loading} variant="outline" size="sm">
+                {loading ? "Saving..." : "Mark as Complete"}
+              </Button>
+            )}
+          </div>
+
+          <div className="mt-8 flex justify-between pb-8">
+            {prev ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/academy/lesson/${prev.id}`}>← {prev.title}</Link>
+              </Button>
+            ) : <div />}
+            {next ? (
+              <Button size="sm" asChild>
+                <Link to={`/academy/lesson/${next.id}`}>{next.title} →</Link>
+              </Button>
+            ) : <div />}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-8 flex justify-between">
-        {prev ? (
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/academy/lesson/${prev.id}`}>← {prev.title}</Link>
-          </Button>
-        ) : <div />}
-        {next ? (
-          <Button size="sm" asChild>
-            <Link to={`/academy/lesson/${next.id}`}>{next.title} →</Link>
-          </Button>
-        ) : <div />}
+      {/* AI Sidebar */}
+      <div className="hidden lg:flex w-80 shrink-0">
+        <AISidebar lessonTitle={lesson.title} lessonContent={lesson.content} />
       </div>
     </div>
   );
