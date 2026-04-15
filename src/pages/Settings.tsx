@@ -11,10 +11,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/components/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
   const { profile, refreshProfile, signOut, user } = useAuth();
   const { theme, toggle } = useTheme();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -179,7 +181,7 @@ const Settings = () => {
                   <p className="font-medium text-foreground">Sign Out</p>
                   <p className="text-sm text-muted-foreground">Sign out of your account</p>
                 </div>
-                <Button variant="destructive" onClick={signOut}>Sign Out</Button>
+                <Button variant="destructive" onClick={async () => { await signOut(); navigate("/signin"); }}>Sign Out</Button>
               </div>
             </CardContent>
           </Card>

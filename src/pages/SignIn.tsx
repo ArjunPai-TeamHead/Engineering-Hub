@@ -155,8 +155,8 @@ const SignIn = () => {
           <div className="flex items-center gap-3 mb-8">
             <img src={logoImg} alt="EngiNexus" className="h-14 w-14 rounded-2xl object-cover" />
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">EngiNexus</h1>
-              <p className="text-sm text-emerald-400/70 font-medium">Engineering Intelligence Platform</p>
+              <h1 className="text-3xl font-bold text-white tracking-tight">EngiNexus</h1>
+              <p className="text-base text-emerald-400 font-semibold tracking-wide">Engineering Intelligence Platform</p>
             </div>
           </div>
 

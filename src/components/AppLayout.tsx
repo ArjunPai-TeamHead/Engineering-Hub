@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
-const PUBLIC_ROUTES = ["/", "/hub", "/workshop", "/lab", "/depot"];
+const PUBLIC_ROUTES = ["/", "/hub", "/workshop", "/lab", "/depot", "/settings", "/cloud", "/hive", "/academy", "/core"];
 
 export function AppLayout() {
   const { user, loading } = useAuth();
