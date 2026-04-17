@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ZoneCard } from "@/components/landing/ZoneCard";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Cpu, MessageSquare, GraduationCap, BrainCircuit,
   ShoppingCart, Wrench, Wifi, Zap, ArrowRight,
@@ -19,6 +20,9 @@ const zones = [
 ];
 
 const Index = () => {
+  const { user } = useAuth();
+  const ctaTo = user ? "/lab" : "/signup";
+  const ctaLabel = user ? "Start Building" : "Get Started — Sign Up";
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-0 grid-pattern opacity-20" />
@@ -43,8 +47,8 @@ const Index = () => {
             The all-in-one hub for hardware engineers — simulate circuits, learn IoT, collaborate with peers, and get AI-powered help.
           </p>
           <Button size="lg" className="gap-2 rounded-full px-8 text-base font-semibold shadow-lg" asChild>
-            <Link to="/lab">
-              Start Building <ArrowRight className="h-4 w-4" />
+            <Link to={ctaTo}>
+              {ctaLabel} <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
         </motion.div>
