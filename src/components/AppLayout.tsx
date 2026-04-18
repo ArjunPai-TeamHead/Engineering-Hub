@@ -2,7 +2,6 @@ import { Outlet, Navigate, useLocation, Link } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoImg from "@/assets/logo.jpeg";
 
@@ -16,12 +15,10 @@ export function AppLayout() {
     (r) => location.pathname === r || (r !== "/" && location.pathname.startsWith(r + "/"))
   );
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+  // While auth is resolving, render a quiet shell so we don't flash a loader.
+  // Public routes render immediately so guests see the landing instantly.
+  if (loading && !isPublic) {
+    return <div className="min-h-screen bg-background" />;
   }
 
   if (!user && !isPublic) {
@@ -32,7 +29,7 @@ export function AppLayout() {
   if (!user) {
     return (
       <div className="min-h-screen w-full bg-background">
-        <header className="flex h-14 items-center justify-between border-b border-border/50 px-6 glass">
+        <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border/50 px-6 backdrop-blur-md bg-background/70">
           <Link to="/" className="flex items-center gap-2">
             <img src={logoImg} alt="EngiNexus" className="h-7 w-7 rounded-full object-cover" />
             <span className="font-bold tracking-tight">EngiNexus</span>
@@ -58,7 +55,7 @@ export function AppLayout() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <main className="flex-1">
+        <main className="flex-1 min-w-0">
           <header className="flex h-12 items-center border-b border-border/50 px-4 glass">
             <SidebarTrigger />
           </header>

@@ -5,7 +5,7 @@ import { ZoneCard } from "@/components/landing/ZoneCard";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Cpu, MessageSquare, GraduationCap, BrainCircuit,
-  ShoppingCart, Wrench, Wifi, Zap, ArrowRight,
+  ShoppingCart, Wrench, Wifi, ArrowRight, Sparkles, Shield, Users, Zap,
 } from "lucide-react";
 import logoImg from "@/assets/logo.jpeg";
 
@@ -19,10 +19,26 @@ const zones = [
   { icon: Wifi, title: "The Grid", description: "IoT bridge connecting your browser to real hardware via MQTT and Web Serial.", color: "hsl(265, 83%, 57%)", path: "/grid" },
 ];
 
+const whyFeatures = [
+  { icon: Sparkles, title: "AI That Speaks Hardware", text: "The Core understands datasheets, decodes compiler errors, and recommends component substitutions — no more Stack Overflow rabbit-holes." },
+  { icon: GraduationCap, title: "Learn by Doing", text: "Hands-on Academy courses with photo-graded projects. Build real circuits, snap a photo, get instant AI feedback." },
+  { icon: ShoppingCart, title: "Build to Cart in Seconds", text: "Browse 100+ components with live pricing, save wishlists, track orders end-to-end. Tax + shipping calculated upfront." },
+  { icon: Users, title: "A Community That Builds", text: "The Hive connects you with engineers worldwide. Share schematics, ask questions, earn Volts for helping others." },
+  { icon: Wrench, title: "Tools, Not Tabs", text: "27 calculators (Ohm's law, voltage divider, LED resistor, PCB trace width…) all in one place. No more browser tab chaos." },
+  { icon: Shield, title: "Built for Trust", text: "End-to-end encrypted uploads, RBAC for sensitive data, role-based permissions, and a private Cloud Database for your projects." },
+];
+
+const testimonials = [
+  { name: "Aarav Mehta", role: "Final-year ECE student, IIT Bombay", text: "The AI grading on photo submissions is wild. I uploaded my LED circuit and it caught a wrong resistor placement instantly. Saved me hours.", avatar: "AM" },
+  { name: "Priya Sharma", role: "Robotics teacher, Bengaluru", text: "I assign Academy courses to my class and review their progress in one dashboard. The Hub makes my life so much easier.", avatar: "PS" },
+  { name: "Karan Verma", role: "Hobbyist & maker", text: "I used to spend 30 minutes price-comparing on Robu vs Amazon. The Depot does it instantly. Just one button to checkout the whole BOM.", avatar: "KV" },
+];
+
 const Index = () => {
   const { user } = useAuth();
   const ctaTo = user ? "/lab" : "/signup";
   const ctaLabel = user ? "Start Building" : "Get Started — Sign Up";
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-0 grid-pattern opacity-20" />
@@ -52,21 +68,92 @@ const Index = () => {
             </Link>
           </Button>
         </motion.div>
-
-        <motion.div
-          className="absolute -bottom-4 left-1/2 h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-primary/30 to-transparent"
-          animate={{ opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity }}
-        />
       </section>
 
-      {/* Zones Grid */}
-      <section className="relative mx-auto max-w-6xl px-6 pb-24">
+      {/* Why EngiNexus */}
+      <section className="relative mx-auto max-w-6xl px-6 py-20">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           className="mb-12 text-center"
+        >
+          <Badge text="Why EngiNexus" />
+          <h2 className="mb-3 mt-3 text-3xl font-bold text-foreground sm:text-4xl">
+            Everything an engineer needs.
+            <span className="text-gradient"> One platform.</span>
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Stop juggling 12 browser tabs. EngiNexus brings simulation, learning, components, AI, and community into one tightly integrated workspace.
+          </p>
+        </motion.div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {whyFeatures.map((f, i) => (
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm p-6 hover:border-primary/30 transition-colors"
+            >
+              <div className="mb-3 inline-flex rounded-2xl bg-primary/10 p-2.5">
+                <f.icon className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="mb-1.5 text-base font-semibold text-foreground">{f.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{f.text}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="relative mx-auto max-w-6xl px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="mb-10 text-center"
+        >
+          <Badge text="Loved by makers" />
+          <h2 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">
+            What engineers are saying
+          </h2>
+        </motion.div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {testimonials.map((t, i) => (
+            <motion.div
+              key={t.name}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm p-6"
+            >
+              <p className="text-sm text-foreground/90 italic leading-relaxed mb-4">"{t.text}"</p>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center text-xs font-bold text-foreground">
+                  {t.avatar}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{t.role}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Zones Grid */}
+      <section className="relative mx-auto max-w-6xl px-6 py-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="mb-10 text-center"
         >
           <h2 className="mb-3 text-3xl font-bold text-foreground sm:text-4xl">
             7 Zones. One Platform.
@@ -80,8 +167,38 @@ const Index = () => {
           ))}
         </div>
       </section>
+
+      {/* Bottom CTA */}
+      <section className="relative mx-auto max-w-3xl px-6 py-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card/50 to-accent/5 p-10 backdrop-blur-sm"
+        >
+          <Zap className="h-10 w-10 text-primary mx-auto mb-4" />
+          <h2 className="mb-3 text-3xl font-bold text-foreground sm:text-4xl">
+            Ready to build something amazing?
+          </h2>
+          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+            Join thousands of engineers who use EngiNexus daily. Sign up free — no credit card required.
+          </p>
+          <Button size="lg" className="gap-2 rounded-full px-8 text-base font-semibold shadow-lg" asChild>
+            <Link to={ctaTo}>
+              {ctaLabel} <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </motion.div>
+      </section>
     </div>
   );
 };
+
+const Badge = ({ text }: { text: string }) => (
+  <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium text-primary border border-primary/20">
+    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+    {text}
+  </div>
+);
 
 export default Index;
