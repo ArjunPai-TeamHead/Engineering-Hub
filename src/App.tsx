@@ -48,6 +48,9 @@ const FastenerCalc = lazy(() => import("./pages/forge/FastenerCalc"));
 const ConnectorMatcher = lazy(() => import("./pages/forge/ConnectorMatcher"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Jobs = lazy(() => import("./pages/settings/Jobs"));
+const JobDetail = lazy(() => import("./pages/settings/JobDetail"));
+const OrderPlaced = lazy(() => import("./pages/OrderPlaced"));
 
 const queryClient = new QueryClient();
 
@@ -98,6 +101,9 @@ const App = () => (
                   <Route path="/workshop/fastener" element={<FastenerCalc />} />
                   <Route path="/workshop/connectors" element={<ConnectorMatcher />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/settings/jobs" element={<Jobs />} />
+                  <Route path="/settings/jobs/:id" element={<JobDetail />} />
+                  <Route path="/order-placed" element={<OrderPlaced />} />
                   <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                   <Route path="/hub" element={<Hub />} />
                   <Route path="/cloud" element={<CloudDatabase />} />

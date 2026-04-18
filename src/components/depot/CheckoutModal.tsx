@@ -47,6 +47,12 @@ export interface CheckoutDetails {
   shippingMethod: string;
   couponCode: string;
   paymentMethod: string;
+  upiId: string;
+  cardNumber: string;
+  cardExpiry: string;
+  cardCvv: string;
+  cardName: string;
+  bankName: string;
 }
 
 const GST_RATE = 0.18; // 18% GST
@@ -77,6 +83,12 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
     shippingMethod: "standard",
     couponCode: "",
     paymentMethod: "stripe",
+    upiId: "",
+    cardNumber: "",
+    cardExpiry: "",
+    cardCvv: "",
+    cardName: "",
+    bankName: "",
   });
 
   const set = (key: keyof CheckoutDetails, val: string | boolean) =>
@@ -295,6 +307,58 @@ const CheckoutModal = ({ open, onClose, items, total, onConfirm }: CheckoutModal
                   </Label>
                 </div>
               </RadioGroup>
+
+              {/* Conditional payment fields */}
+              {details.paymentMethod === "stripe" && (
+                <div className="space-y-3 pt-3 border-t border-border">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Cardholder Name *</Label>
+                    <Input value={details.cardName} onChange={e => set("cardName", e.target.value)} autoComplete="off" placeholder="Name on card" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Card Number *</Label>
+                    <Input value={details.cardNumber} onChange={e => set("cardNumber", e.target.value.replace(/[^0-9 ]/g, "").slice(0, 19))} autoComplete="off" placeholder="1234 5678 9012 3456" inputMode="numeric" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Expiry (MM/YY) *</Label>
+                      <Input value={details.cardExpiry} onChange={e => set("cardExpiry", e.target.value.replace(/[^0-9/]/g, "").slice(0, 5))} autoComplete="off" placeholder="12/28" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">CVV *</Label>
+                      <Input type="password" value={details.cardCvv} onChange={e => set("cardCvv", e.target.value.replace(/[^0-9]/g, "").slice(0, 4))} autoComplete="off" placeholder="123" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {details.paymentMethod === "upi" && (
+                <div className="space-y-1.5 pt-3 border-t border-border">
+                  <Label className="text-xs">UPI ID *</Label>
+                  <Input value={details.upiId} onChange={e => set("upiId", e.target.value.toLowerCase())} autoComplete="off" placeholder="9876543210@ybl  or  yourname@okicici" />
+                  <p className="text-[10px] text-muted-foreground">Format: phonenumber@ybl (PhonePe), name@okicici (Google Pay), etc.</p>
+                </div>
+              )}
+              {details.paymentMethod === "netbanking" && (
+                <div className="space-y-1.5 pt-3 border-t border-border">
+                  <Label className="text-xs">Select Your Bank *</Label>
+                  <Select value={details.bankName} onValueChange={v => set("bankName", v)}>
+                    <SelectTrigger><SelectValue placeholder="Choose a bank" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hdfc">HDFC Bank</SelectItem>
+                      <SelectItem value="icici">ICICI Bank</SelectItem>
+                      <SelectItem value="sbi">State Bank of India</SelectItem>
+                      <SelectItem value="axis">Axis Bank</SelectItem>
+                      <SelectItem value="kotak">Kotak Mahindra Bank</SelectItem>
+                      <SelectItem value="yes">Yes Bank</SelectItem>
+                      <SelectItem value="pnb">Punjab National Bank</SelectItem>
+                      <SelectItem value="bob">Bank of Baroda</SelectItem>
+                      <SelectItem value="canara">Canara Bank</SelectItem>
+                      <SelectItem value="union">Union Bank of India</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground">You'll be redirected to your bank's secure portal.</p>
+                </div>
+              )}
             </div>
           )}
 

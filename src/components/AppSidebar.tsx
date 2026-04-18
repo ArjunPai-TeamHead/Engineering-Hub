@@ -95,7 +95,11 @@ export function AppSidebar() {
             </Button>
           )}
           {user ? (
-            <Button variant="ghost" size="icon" onClick={async () => { await signOut(); navigate("/signin"); }} title="Sign out" className="rounded-2xl">
+            <Button variant="ghost" size="icon" onClick={async () => {
+              await signOut();
+              navigate("/", { replace: true });
+              setTimeout(() => window.location.reload(), 50);
+            }} title="Sign out" className="rounded-2xl">
               <LogOut className="h-4 w-4" />
             </Button>
           ) : (
