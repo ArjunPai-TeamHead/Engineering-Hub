@@ -165,12 +165,120 @@ export type Database = {
           },
         ]
       }
+      job_applications: {
+        Row: {
+          cover_letter: string | null
+          created_at: string
+          current_company: string | null
+          email: string
+          experience_years: number | null
+          full_name: string
+          id: string
+          job_id: string
+          linkedin_url: string | null
+          phone: string
+          resume_url: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_letter?: string | null
+          created_at?: string
+          current_company?: string | null
+          email: string
+          experience_years?: number | null
+          full_name: string
+          id?: string
+          job_id: string
+          linkedin_url?: string | null
+          phone: string
+          resume_url: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_letter?: string | null
+          created_at?: string
+          current_company?: string | null
+          email?: string
+          experience_years?: number | null
+          full_name?: string
+          id?: string
+          job_id?: string
+          linkedin_url?: string | null
+          phone?: string
+          resume_url?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          created_at: string
+          department: string
+          description: string
+          employment_type: string
+          id: string
+          is_open: boolean
+          location: string | null
+          requirements: string
+          salary_range: string
+          title: string
+          updated_at: string
+          work_mode: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          description: string
+          employment_type?: string
+          id?: string
+          is_open?: boolean
+          location?: string | null
+          requirements: string
+          salary_range: string
+          title: string
+          updated_at?: string
+          work_mode?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          description?: string
+          employment_type?: string
+          id?: string
+          is_open?: boolean
+          location?: string | null
+          requirements?: string
+          salary_range?: string
+          title?: string
+          updated_at?: string
+          work_mode?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
           currency: string
+          gst_amount: number | null
           id: string
           items: Json
+          payment_method: string | null
+          shipping_cost: number | null
+          shipping_details: Json | null
           status: string
           stripe_session_id: string | null
           total_amount: number
@@ -180,8 +288,12 @@ export type Database = {
         Insert: {
           created_at?: string
           currency?: string
+          gst_amount?: number | null
           id?: string
           items?: Json
+          payment_method?: string | null
+          shipping_cost?: number | null
+          shipping_details?: Json | null
           status?: string
           stripe_session_id?: string | null
           total_amount?: number
@@ -191,8 +303,12 @@ export type Database = {
         Update: {
           created_at?: string
           currency?: string
+          gst_amount?: number | null
           id?: string
           items?: Json
+          payment_method?: string | null
+          shipping_cost?: number | null
+          shipping_details?: Json | null
           status?: string
           stripe_session_id?: string | null
           total_amount?: number
@@ -240,6 +356,36 @@ export type Database = {
           user_id?: string
           username?: string | null
           volts?: number
+        }
+        Relationships: []
+      }
+      user_bans: {
+        Row: {
+          ban_type: string
+          banned_by: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          ban_type?: string
+          banned_by: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          ban_type?: string
+          banned_by?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          reason?: string
+          user_id?: string
         }
         Relationships: []
       }
