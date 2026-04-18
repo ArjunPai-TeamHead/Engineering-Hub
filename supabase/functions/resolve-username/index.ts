@@ -11,9 +11,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { username } = await req.json();
-    if (!username || typeof username !== "string" || username.length < 3) {
-      return new Response(JSON.stringify({ error: "Invalid username" }), {
+    const { username, password } = await req.json();
+    if (
+      !username || typeof username !== "string" || username.trim().length < 3 ||
+      !password || typeof password !== "string" || password.length < 1
+    ) {
+      return new Response(JSON.stringify({ error: "Invalid credentials" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -24,33 +27,57 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Look up user_id from profiles
-    const { data: profile, error: profileError } = await supabaseAdmin
+    // Look up user_id from profiles by username (case-insensitive)
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("user_id")
       .ilike("username", username.trim())
       .maybeSingle();
 
-    if (profileError || !profile) {
-      return new Response(JSON.stringify({ error: "Username not found" }), {
-        status: 404,
+    if (!profile) {
+      // Generic error to prevent username enumeration
+      return new Response(JSON.stringify({ error: "Invalid username or password" }), {
+        status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Get email from auth.users using admin API
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
-
-    if (authError || !authData?.user?.email) {
-      return new Response(JSON.stringify({ error: "Could not resolve email" }), {
-        status: 404,
+    // Resolve email server-side (never returned to client)
+    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
+    const email = authData?.user?.email;
+    if (!email) {
+      return new Response(JSON.stringify({ error: "Invalid username or password" }), {
+        status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ email: authData.user.email }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Perform sign-in server-side using a non-admin client
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    const { data: signInData, error: signInError } = await supabaseAuth.auth.signInWithPassword({
+      email,
+      password,
     });
+
+    if (signInError || !signInData?.session) {
+      return new Response(JSON.stringify({ error: "Invalid username or password" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Return only the session tokens; email never leaves the server
+    return new Response(
+      JSON.stringify({
+        access_token: signInData.session.access_token,
+        refresh_token: signInData.session.refresh_token,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (e) {
     console.error("resolve-username error:", e);
     return new Response(JSON.stringify({ error: "An internal error occurred." }), {
