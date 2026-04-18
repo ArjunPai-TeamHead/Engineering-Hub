@@ -190,31 +190,32 @@ const Depot = () => {
   };
 
   const handleCheckoutConfirm = async (details: CheckoutDetails) => {
-    const items = cartItems.map(({ id, name, quantity }) => ({ id, name, quantity }));
+    const items = cartItems.map(({ id, name, quantity }) => ({ id, name, quantity, price: getBestPrice(id) || 0 }));
+    const gstAmount = Math.round(cartTotal * 0.18);
+    const shippingCost = details.shippingMethod === "express" ? 149 : details.shippingMethod === "sameday" ? 299 : 49;
+    const grandTotal = cartTotal + gstAmount + shippingCost;
 
-    await supabase.from("orders").insert({
+    // Strip card/cvv from snapshot for security
+    const safeShipping = { ...details, cardNumber: details.cardNumber ? `**** **** **** ${details.cardNumber.slice(-4)}` : "", cardCvv: "" };
+
+    const { data: orderRow } = await supabase.from("orders").insert({
       user_id: user!.id,
       items: items as any,
-      total_amount: cartTotal,
+      total_amount: grandTotal,
+      gst_amount: gstAmount,
+      shipping_cost: shippingCost,
       currency: "INR",
       status: "pending",
-    });
+      payment_method: details.paymentMethod,
+      shipping_details: safeShipping as any,
+    }).select("id").maybeSingle();
 
-    try {
-      const { data, error } = await supabase.functions.invoke("create-depot-checkout", { body: { items } });
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      }
-      // Always clear cart and close modal after successful order placement
-      setCart({});
-      setCheckoutOpen(false);
-      toast({ title: "Order placed!", description: "Your order has been submitted successfully." });
-    } catch (err: any) {
-      // Still clear cart — the order was already saved to the database
-      setCart({});
-      setCheckoutOpen(false);
-      toast({ title: "Order saved", description: "Your order has been recorded. Payment link may not be available right now.", variant: "destructive" });
+    setCart({});
+    setCheckoutOpen(false);
+    toast({ title: "Order placed!", description: "Your order has been submitted successfully." });
+
+    if (orderRow?.id) {
+      window.location.href = `/order-placed?id=${orderRow.id}`;
     }
   };
 

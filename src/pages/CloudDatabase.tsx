@@ -84,7 +84,12 @@ const CloudDatabase = () => {
   const uploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-    const filePath = `${user.id}/${Date.now()}-${file.name}`;
+    if (file.size > 20 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 20MB per file.", variant: "destructive" });
+      return;
+    }
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `${user.id}/files/${Date.now()}-${safeName}`;
     const { error: uploadError } = await supabase.storage.from("user-files").upload(filePath, file);
     if (uploadError) { toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" }); return; }
     // Store path, not public URL — bucket is private, use signed URLs at render
