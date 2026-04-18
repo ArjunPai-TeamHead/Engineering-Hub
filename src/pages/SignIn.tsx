@@ -87,36 +87,34 @@ const SignIn = () => {
     try {
       let email = identifier.trim();
 
-      // If it doesn't look like an email, resolve username
+      // If it doesn't look like an email, sign in via secure edge function (no email leak)
       if (!email.includes("@")) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("user_id")
-          .ilike("username", email)
-          .maybeSingle();
-
-        if (!profileData) {
-          setFieldError("No account found with that username.");
-          triggerShake();
-          setLoading(false);
-          return;
-        }
-
-        // We need the email. Let's try signing in with a lookup edge function,
-        // or use a workaround: query with service role.
-        // Simplest: store email in profiles, or use an edge function.
-        // For now, let's use an edge function approach.
         const { data: fnData, error: fnError } = await supabase.functions.invoke("resolve-username", {
-          body: { username: email },
+          body: { username: email, password },
         });
 
-        if (fnError || !fnData?.email) {
-          setFieldError("Could not resolve username. Try using your email instead.");
+        if (fnError || !fnData?.access_token || !fnData?.refresh_token) {
+          setFieldError("Invalid username or password.");
           triggerShake();
           setLoading(false);
           return;
         }
-        email = fnData.email;
+
+        const { error: setErr } = await supabase.auth.setSession({
+          access_token: fnData.access_token,
+          refresh_token: fnData.refresh_token,
+        });
+
+        if (setErr) {
+          setFieldError("Could not establish session. Please try again.");
+          triggerShake();
+          setLoading(false);
+          return;
+        }
+
+        toast({ title: "Welcome back!", description: "Signed in successfully." });
+        navigate(from, { replace: true });
+        return;
       }
 
       const { error } = await supabase.auth.signInWithPassword({ email, password });
