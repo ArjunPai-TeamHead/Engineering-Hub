@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ShoppingCart, Search, Package, Box, Plus, Minus, Trash2, CreditCard,
   Heart, History, Clock, CheckCircle2, XCircle, Loader2,
@@ -126,6 +127,7 @@ const Depot = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
@@ -215,7 +217,7 @@ const Depot = () => {
     toast({ title: "Order placed!", description: "Your order has been submitted successfully." });
 
     if (orderRow?.id) {
-      window.location.href = `/order-placed?id=${orderRow.id}`;
+      navigate(`/order-placed?id=${orderRow.id}`);
     }
   };
 
