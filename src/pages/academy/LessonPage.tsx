@@ -258,6 +258,8 @@ const LessonPage = () => {
   const { user } = useAuth();
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+  const [curriculumOpen, setCurriculumOpen] = useState(true);
 
   let lesson = null;
   let course = null;
@@ -270,13 +272,15 @@ const LessonPage = () => {
     if (!user || !lesson || !course) return;
     supabase
       .from("course_progress")
-      .select("completed")
+      .select("lesson_id, completed")
       .eq("user_id", user.id)
-      .eq("lesson_id", lesson.id)
       .eq("course_id", course.id)
-      .maybeSingle()
+      .eq("completed", true)
       .then(({ data }) => {
-        if (data?.completed) setCompleted(true);
+        if (!data) return;
+        const set = new Set(data.map((d) => d.lesson_id));
+        setCompletedLessons(set);
+        if (set.has(lesson.id)) setCompleted(true);
       });
   }, [user, lesson?.id, course?.id]);
 
@@ -304,6 +308,7 @@ const LessonPage = () => {
       });
     }
     setCompleted(true);
+    setCompletedLessons((prev) => new Set(prev).add(lesson!.id));
     setLoading(false);
     toast.success("Lesson marked as complete! 🎉");
   };
@@ -320,19 +325,93 @@ const LessonPage = () => {
   const lessonIdx = course.lessons.findIndex((l) => l.id === id);
   const prev = lessonIdx > 0 ? course.lessons[lessonIdx - 1] : null;
   const next = lessonIdx < course.lessons.length - 1 ? course.lessons[lessonIdx + 1] : null;
+  const courseProgress = Math.round((completedLessons.size / course.lessons.length) * 100);
 
   return (
     <div className="flex h-[calc(100vh-3rem)]">
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="mx-auto max-w-3xl">
-          <Button variant="ghost" size="sm" asChild className="mb-4">
-            <Link to={`/academy/course/${course.id}`}><ArrowLeft className="mr-2 h-4 w-4" />{course.title}</Link>
-          </Button>
+      {/* Curriculum sidebar (Udemy-style) */}
+      {curriculumOpen && (
+        <aside className="hidden md:flex w-72 shrink-0 flex-col border-r border-border bg-card/30">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <ListChecks className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-sm font-semibold text-foreground truncate">Course content</span>
+            </div>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurriculumOpen(false)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="px-4 py-2 border-b border-border">
+            <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+              <span className="truncate pr-2">{course.title}</span>
+              <span>{completedLessons.size}/{course.lessons.length}</span>
+            </div>
+            <div className="h-1 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${courseProgress}%` }} />
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2">
+            {course.lessons.map((l, i) => {
+              const isDone = completedLessons.has(l.id);
+              const isActive = l.id === lesson!.id;
+              return (
+                <Link
+                  key={l.id}
+                  to={`/academy/lesson/${l.id}`}
+                  className={`flex items-start gap-2 rounded-lg px-2 py-2 text-xs transition-colors ${
+                    isActive ? "bg-primary/15 text-foreground" : "hover:bg-muted/60 text-muted-foreground"
+                  }`}
+                >
+                  {isDone ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                  ) : (
+                    <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold mt-0.5 ${
+                      isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    }`}>{i + 1}</span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className={`leading-snug ${isActive ? "font-semibold text-foreground" : ""}`}>{l.title}</p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-0.5">{l.duration}</p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </aside>
+      )}
 
-          <article className="prose-sm">
-            {renderContent(lesson.content)}
-          </article>
+      {/* Main content */}
+      <div className="flex-1 overflow-y-auto p-6 min-w-0">
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-4 flex items-center gap-2 flex-wrap">
+            {!curriculumOpen && (
+              <Button variant="outline" size="sm" onClick={() => setCurriculumOpen(true)} className="gap-1.5 rounded-full">
+                <ListChecks className="h-4 w-4" /> Curriculum
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={`/academy/course/${course.id}`}><ArrowLeft className="mr-2 h-4 w-4" />{course.title}</Link>
+            </Button>
+            <Badge variant="outline" className="ml-auto rounded-full text-[10px]">Lesson {lessonIdx + 1} / {course.lessons.length}</Badge>
+          </div>
+
+          {/* Mobile tabs: content vs AI */}
+          <div className="lg:hidden mb-4">
+            <Tabs defaultValue="content">
+              <TabsList className="rounded-full">
+                <TabsTrigger value="content" className="rounded-full text-xs"><BrainCircuit className="h-3 w-3 mr-1" />Content</TabsTrigger>
+                <TabsTrigger value="ai" className="rounded-full text-xs"><Bot className="h-3 w-3 mr-1" />AI Helper</TabsTrigger>
+              </TabsList>
+              <TabsContent value="content" className="mt-4">
+                <article className="prose-sm">{renderContent(lesson.content)}</article>
+              </TabsContent>
+              <TabsContent value="ai" className="mt-4 h-[60vh]">
+                <AISidebar lessonTitle={lesson.title} lessonContent={lesson.content} />
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <article className="prose-sm hidden lg:block">{renderContent(lesson.content)}</article>
 
           {/* Photo grading replaces quizzes */}
           <PhotoGrading
@@ -348,20 +427,20 @@ const LessonPage = () => {
                 <CheckCircle2 className="h-5 w-5" /> Lesson Complete
               </div>
             ) : (
-              <Button onClick={markComplete} disabled={loading} variant="outline" size="sm">
+              <Button onClick={markComplete} disabled={loading} variant="outline" size="sm" className="rounded-full">
                 {loading ? "Saving..." : "Mark as Complete"}
               </Button>
             )}
           </div>
 
-          <div className="mt-8 flex justify-between pb-8">
+          <div className="mt-8 flex justify-between pb-8 gap-2">
             {prev ? (
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="rounded-full">
                 <Link to={`/academy/lesson/${prev.id}`}>← {prev.title}</Link>
               </Button>
             ) : <div />}
             {next ? (
-              <Button size="sm" asChild>
+              <Button size="sm" asChild className="rounded-full">
                 <Link to={`/academy/lesson/${next.id}`}>{next.title} →</Link>
               </Button>
             ) : <div />}
@@ -369,7 +448,7 @@ const LessonPage = () => {
         </div>
       </div>
 
-      {/* AI Sidebar */}
+      {/* AI Sidebar (desktop) */}
       <div className="hidden lg:flex w-80 shrink-0">
         <AISidebar lessonTitle={lesson.title} lessonContent={lesson.content} />
       </div>
