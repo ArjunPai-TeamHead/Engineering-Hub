@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Send, Loader2, Upload, Camera, BrainCircuit } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Send, Loader2, Upload, Camera, BrainCircuit, ListChecks, Bot, ChevronLeft } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
