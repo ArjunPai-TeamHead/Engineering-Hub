@@ -80,7 +80,7 @@ export function AppSidebar() {
           </div>
         )}
 
-        <div className="flex gap-1 justify-center">
+        <div className={`flex gap-1 ${collapsed ? "flex-col items-center" : "justify-center"}`}>
           <Button variant="ghost" size="icon" onClick={toggle} className="rounded-2xl">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>

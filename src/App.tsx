@@ -51,6 +51,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Jobs = lazy(() => import("./pages/settings/Jobs"));
 const JobDetail = lazy(() => import("./pages/settings/JobDetail"));
 const OrderPlaced = lazy(() => import("./pages/OrderPlaced"));
+const Cart = lazy(() => import("./pages/Cart"));
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => (
                   <Route path="/certificates" element={<Certificates />} />
                   <Route path="/core" element={<Core />} />
                   <Route path="/depot" element={<Depot />} />
+                  <Route path="/cart" element={<Cart />} />
                   <Route path="/workshop" element={<Workshop />} />
                   <Route path="/workshop/resistor" element={<ResistorCalculator />} />
                   <Route path="/workshop/ohms-law" element={<OhmsLaw />} />
