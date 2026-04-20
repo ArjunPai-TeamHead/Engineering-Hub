@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import CheckoutModal, { type CheckoutDetails } from "@/components/depot/CheckoutModal";
+import { useCart } from "@/hooks/useCart";
 
 const pricing: Record<string, { robu: number | null; amazon: number | null; inStock: boolean }> = {
   "arduino-uno": { robu: 1801, amazon: 1339, inStock: true },
@@ -118,7 +119,6 @@ const statusIcon: Record<string, React.ReactNode> = {
 
 const Depot = () => {
   const [search, setSearch] = useState("");
-  const [cart, setCart] = useState<Record<string, number>>({});
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("shop");
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
@@ -128,6 +128,9 @@ const Depot = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { cart, addToCart, setQty: setCartQty, clearCart } = useCart();
+  const removeFromCart = (id: string) => setCartQty(id, (cart[id] || 0) - 1);
+
 
   useEffect(() => {
     if (!user) return;
@@ -170,13 +173,8 @@ const Depot = () => {
     })
     .filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.description.toLowerCase().includes(search.toLowerCase()));
 
-  const addToCart = (id: string) => setCart(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-  const removeFromCart = (id: string) => setCart(prev => {
-    const next = { ...prev };
-    if (next[id] > 1) next[id]--;
-    else delete next[id];
-    return next;
-  });
+  // addToCart / removeFromCart now come from the shared useCart hook above.
+
 
   const cartTotal = Object.entries(cart).reduce((sum, [id, qty]) => sum + ((getBestPrice(id) || 0) * qty), 0);
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
@@ -212,7 +210,7 @@ const Depot = () => {
       shipping_details: safeShipping as any,
     }).select("id").maybeSingle();
 
-    setCart({});
+    clearCart();
     setCheckoutOpen(false);
     toast({ title: "Order placed!", description: "Your order has been submitted successfully." });
 
@@ -294,8 +292,8 @@ const Depot = () => {
                 <p className="text-sm font-semibold text-foreground">{cartCount} items</p>
                 <p className="text-xs text-muted-foreground font-mono">₹{cartTotal.toLocaleString("en-IN")}</p>
               </div>
-              <Button size="sm" onClick={handleCheckout} className="rounded-xl gap-1.5">
-                <CreditCard className="h-3.5 w-3.5" /> Checkout
+              <Button size="sm" onClick={() => navigate("/cart")} className="rounded-xl gap-1.5">
+                <CreditCard className="h-3.5 w-3.5" /> View cart
               </Button>
             </CardContent>
           </Card>
